@@ -11,9 +11,23 @@ module.exports = {
     path: outputDir,
     filename: 'Index.js'
   },
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpg|gif|svg)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {},
+          },
+        ],
+      },
+    ],
+  },
   plugins: [
     new HtmlWebpackPlugin({
       template: 'src/index.html',
+      favicon: "./src/favicon.ico",
       inject: false
     })
   ],
