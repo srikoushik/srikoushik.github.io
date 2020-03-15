@@ -3,13 +3,13 @@ type route =
     | Me
 
 let fromUrl = (url: ReasonReactRouter.url) =>
-    switch (url.path) {
-    | [] => Home->Some
-    | ["me"] => Me->Some
+    switch (url.hash) {
+    | "" => Home->Some
+    | "me" => Me->Some
     | _ => None
     };
 
 let toString =
     fun
     | Home => "/"
-    | Me => "/me"
+    | Me => "#me"
