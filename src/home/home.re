@@ -2,13 +2,13 @@
 
 [@react.component]
 let make = () => {
-  <div className="flex justify-center h-screen items-center font-mono bg-gray-800">
+  <div className="flex justify-center h-screen items-center font-mono bg-gray-700">
     <img className="h-32 w-32 rounded-full border-gray-400 border-4 border" alt="koushik" src=myImage/>
     <div className="text-sm pl-8">
         <p className="text-gray-200 text-3xl cursor-default">{ReasonReact.string("Koushik")}</p>
         <div className="flex mb-2">
-          <p className="text-gray-300 text-base p-1 rounded md:hover:bg-blue-500 cursor-pointer" onClick={ _ => ReasonReactRouter.push("#me")}>{ReasonReact.string("Me")}</p>
-          <a className="text-gray-300 text-base p-1 ml-4 rounded md:hover:bg-red-500 cursor-pointer" href="https://medium.com/@srikoushik" target="_blank">{ReasonReact.string("Blog")}</a>
+          <p className="text-gray-300 text-base p-1 rounded md:hover:bg-blue-600 cursor-pointer" onClick={ _ => ReasonReactRouter.push("#me")}>{ReasonReact.string("Me")}</p>
+          <a className="text-gray-300 text-base p-1 ml-4 rounded md:hover:bg-red-600 cursor-pointer" href="https://medium.com/@srikoushik" target="_blank">{ReasonReact.string("Blog")}</a>
         </div>
         <div className="flex">
           <a href="https://github.com/srikoushik" target="_blank" className="p-1 mr-4 fill-current text-gray-300 md:hover:text-black cursor-pointer">
