@@ -1,4 +1,7 @@
 [@bs.module] external myImage: string = "../../assets/me.png";
+[@bs.module "../analytics.js"] external gaPageView: string => React.element = "GAPageView";
+
+gaPageView("/")
 
 [@react.component]
 let make = () => {

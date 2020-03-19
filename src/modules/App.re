@@ -3,7 +3,7 @@
 [@react.component]
 let make = () => {
 
-  gaInitialize();
+  gaInitialize() |> ignore
 
   let route = Router.useRouter();
 
