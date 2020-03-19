@@ -1,9 +1,9 @@
-[@bs.module "../analytics.js"] external gAInitialize: unit = "GAInitialize";
+[@bs.module "../analytics.js"] external gaInitialize: unit => React.element = "GAInitialize";
 
 [@react.component]
 let make = () => {
 
-  gAInitialize
+  gaInitialize();
 
   let route = Router.useRouter();
 
