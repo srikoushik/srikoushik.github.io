@@ -8,8 +8,10 @@ const isLocalhost
   || window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/);
 
 export const GAInitialize = () => {
+    console.log("Yet to initialised");
     if (!isLocalhost) {
         ReactGA.initialize('UA-161006761-1');
+        console.log("Initialised")
     }
 };
 
