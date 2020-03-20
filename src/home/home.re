@@ -1,17 +1,42 @@
+type eventAnalytics = {
+  category: string,
+  action: string
+};
 [@bs.module] external myImage: string = "../../assets/me.png";
 [@bs.module "../analytics.js"] external gaPageView: string => React.element = "GAPageView";
+[@bs.module "../analytics.js"] external gaEvent: eventAnalytics => unit = "GAEvent";
 
 [@react.component]
 let make = () => {
   gaPageView("/") |> ignore;
+  let meButtonAnalytics = {
+    category: "home",
+    action: "tap_me_button"
+  };
+
+  let blogButtonAnalytics = {
+    category: "home",
+    action: "tap_blog_button"
+  };
 
   <div className="flex justify-center h-screen items-center font-mono bg-gray-700">
     <img className="h-32 w-32 rounded-full border-gray-400 border-4 border" alt="koushik" src=myImage/>
     <div className="text-sm pl-8">
         <p className="text-gray-200 text-3xl cursor-default">{ReasonReact.string("Koushik")}</p>
         <div className="flex mb-2">
-          <p className="text-gray-300 text-base p-1 rounded md:hover:bg-blue-500 cursor-pointer" onClick={ _ => ReasonReactRouter.push("#me")}>{ReasonReact.string("Me")}</p>
-          <a className="text-gray-300 text-base p-1 ml-2 rounded md:hover:bg-blue-500 cursor-pointer" href="https://medium.com/@srikoushik" target="_blank">{ReasonReact.string("Blog")}</a>
+          <p className="text-gray-300 text-base p-1 rounded md:hover:bg-blue-500 cursor-pointer" 
+          onClick={ _ => {
+            gaEvent(meButtonAnalytics)
+            ReasonReactRouter.push("#me")
+          }}>
+          {ReasonReact.string("Me")}
+          </p>
+          <a className="text-gray-300 text-base p-1 ml-2 rounded md:hover:bg-blue-500 cursor-pointer" href="https://medium.com/@srikoushik" target="_blank" 
+          onClick={ _ => {
+            gaEvent(blogButtonAnalytics)
+          }}>
+          {ReasonReact.string("Blog")}
+          </a>
           // <p className="text-gray-300 text-base p-1 ml-2 rounded md:hover:bg-blue-500 cursor-pointer">{ReasonReact.string("Contact")}</p>
         </div>
         <div className="flex">
