@@ -2,6 +2,7 @@
 [@bs.module "../analytics.js"] external gaPageView: string => React.element = "GAPageView";
 
 gaPageView("/")
+Js.log("Calling page view analytics");
 
 [@react.component]
 let make = () => {

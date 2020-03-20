@@ -19,7 +19,7 @@ export const GAInitialize = () => {
 };
 
 export const GAPageView = (props) => {
-  console.log("Initialised status", isInitialised);
+  console.log("Initialised status from pageview", isInitialised);
   if (!isLocalhost && isInitialised) {
     console.log("This is page view props:", props);
     switch (props) {
