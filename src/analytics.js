@@ -1,4 +1,5 @@
 import ReactGA from 'react-ga';
+let isInitialised = false;
 
 const isLocalhost
   = window.location.hostname === 'localhost'
@@ -11,12 +12,13 @@ export const GAInitialize = () => {
     console.log("Yet to initialised");
     if (!isLocalhost) {
         ReactGA.initialize('UA-161006761-1');
+        isInitialised = true;
         console.log("Initialised")
     }
 };
 
 export const GAPageView = (props) => {
-    if (!isLocalhost) {
+    if (!isLocalhost && isInitialised) {
       switch (props) {
         case '/':
           ReactGA.pageview('/home');
