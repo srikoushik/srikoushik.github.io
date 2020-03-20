@@ -9,7 +9,7 @@ type eventAnalytics = {
 [@react.component]
 let make = () => {
   let blogButtonAnalytics = {
-    category: "home",
+    category: "me",
     action: "tap_blog_button"
   };
 
