@@ -1,9 +1,5 @@
-[@bs.module "../analytics.js"] external gaInitialize: unit => React.element = "GAInitialize";
-
 [@react.component]
 let make = () => {
-
-  gaInitialize() |> ignore
 
   let route = Router.useRouter();
 
