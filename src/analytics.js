@@ -31,7 +31,6 @@ export const GAPageView = (props) => {
 };
 
 export const GAEvent = (config) => {
-  console.log("Events: ", config);
   if (!isLocalhost && isInitialised) {
     ReactGA.event({
       category: config[0],

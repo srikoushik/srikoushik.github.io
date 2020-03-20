@@ -1,15 +1,28 @@
+type eventAnalytics = {
+  category: string,
+  action: string
+};
+[@bs.module "../analytics.js"] external gaEvent: eventAnalytics => unit = "GAEvent";
 [@bs.module] external myImage: string = "../../assets/me.png";
 [@bs.module] external myImage: string = "../../assets/me.png";
 
 [@react.component]
 let make = () => {
+  let blogButtonAnalytics = {
+    category: "home",
+    action: "tap_blog_button"
+  };
+
   <div className="flex flex-col w-9/12 container mx-auto">
     <div className="flex flex-col">
       <div className="flex mt-4 mb-4">
         <img className="h-6 w-6 rounded-full border-gray-400 border-4 border cursor-pointer" alt="koushik" src=myImage onClick={ _ => ReasonReactRouter.push("/") }/>
         <p className="text-gray-300 pl-2 text-lg cursor-pointer" onClick={ _ => ReasonReactRouter.push("/") }>"Koushik"->React.string</p>
         <p className="text-gray-300 text-base ml-4 pl-2 pr-2 mr-2 rounded bg-blue-500 cursor-default">"Me"->React.string</p>
-        <a href="https://medium.com/@srikoushik" target="_blank" className="text-gray-300 ml-2 text-base cursor-pointer">
+        <a href="https://medium.com/@srikoushik" target="_blank" className="text-gray-300 ml-2 text-base cursor-pointer"
+          onClick={ _ => {
+            gaEvent(blogButtonAnalytics)
+          }}>
           "Blog"->React.string
         </a>
       </div>
