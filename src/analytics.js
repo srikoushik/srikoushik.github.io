@@ -9,26 +9,27 @@ const isLocalhost
   || window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/);
 
 export const GAInitialize = () => {
-    console.log("Yet to initialised");
-    if (!isLocalhost) {
-        ReactGA.initialize('UA-161006761-1');
-        isInitialised = true;
-        console.log("Initialised")
-    }
+  console.log("Yet to initialised");
+  if (!isLocalhost) {
+      ReactGA.initialize('UA-161006761-1');
+      isInitialised = true;
+      console.log("Initialised")
+  }
 };
 
 export const GAPageView = (props) => {
-    if (!isLocalhost && isInitialised) {
-      console.log("This is page view props:", props);
-      switch (props) {
-        case '/':
-          ReactGA.pageview('/home');
-          break;
-        case 'me':
-          ReactGA.pageview('/me');
-          break;
-        default:
-          break;
-      }
+  console.log("Initialised", isInitialised);
+  if (!isLocalhost && isInitialised) {
+    console.log("This is page view props:", props);
+    switch (props) {
+      case '/':
+        ReactGA.pageview('/home');
+        break;
+      case 'me':
+        ReactGA.pageview('/me');
+        break;
+      default:
+        break;
     }
-  };
+  }
+};
