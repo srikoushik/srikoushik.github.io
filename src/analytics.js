@@ -34,8 +34,8 @@ export const GAEvent = (config) => {
   console.log("Events: ", config);
   if (!isLocalhost && isInitialised) {
     ReactGA.event({
-      category: config.category,
-      action: config.action
+      category: config[0],
+      action: config[1]
     });
   }
 };
