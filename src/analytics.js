@@ -19,6 +19,7 @@ export const GAInitialize = () => {
 
 export const GAPageView = (props) => {
     if (!isLocalhost && isInitialised) {
+      console.log("This is page view props:", props);
       switch (props) {
         case '/':
           ReactGA.pageview('/home');
