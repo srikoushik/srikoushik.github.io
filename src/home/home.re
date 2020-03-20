@@ -1,11 +1,12 @@
 [@bs.module] external myImage: string = "../../assets/me.png";
 [@bs.module "../analytics.js"] external gaPageView: string => React.element = "GAPageView";
 
-gaPageView("/")
-Js.log("Calling page view analytics");
 
 [@react.component]
 let make = () => {
+  gaPageView("/") |> ignore
+  Js.log("Calling page view analytics");
+
   <div className="flex justify-center h-screen items-center font-mono bg-gray-700">
     <img className="h-32 w-32 rounded-full border-gray-400 border-4 border" alt="koushik" src=myImage/>
     <div className="text-sm pl-8">
