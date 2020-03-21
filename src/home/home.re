@@ -2,7 +2,7 @@ type eventAnalytics = {
   category: string,
   action: string
 };
-[@bs.module] external myImage: string = "../../assets/me.png";
+[@bs.module] external myImage: string = "../../assets/me.jpg";
 [@bs.module "../analytics.js"] external gaPageView: string => React.element = "GAPageView";
 [@bs.module "../analytics.js"] external gaEvent: eventAnalytics => unit = "GAEvent";
 

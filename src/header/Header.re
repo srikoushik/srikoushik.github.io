@@ -3,8 +3,7 @@ type eventAnalytics = {
   action: string
 };
 [@bs.module "../analytics.js"] external gaEvent: eventAnalytics => unit = "GAEvent";
-[@bs.module] external myImage: string = "../../assets/me.png";
-[@bs.module] external myImage: string = "../../assets/me.png";
+[@bs.module] external myImage: string = "../../assets/me.jpg";
 
 [@react.component]
 let make = () => {
