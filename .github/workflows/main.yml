@@ -13,7 +13,6 @@ jobs:
 
     - name: Build
       run: |
-        npm run clean
         npm install
         npm run-script build
         npm run webpack:production
