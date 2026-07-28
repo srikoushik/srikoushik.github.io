@@ -77,6 +77,24 @@ is not.
 **Adding shadcn components:** `npx shadcn@latest add <name>`. They land in
 `src/components/ui/` as source you own.
 
+## The profile photo
+
+`src/assets/me-source.jpg` is the uncropped original. The two derived files
+are generated from it with sharp — a square crop baked into the file rather
+than left to `object-cover`, which on a 2:3 portrait would centre on the
+torso and cut the head off:
+
+```js
+const CROP = { left: 345, top: 90, width: 2110, height: 2110 };
+sharp('src/assets/me-source.jpg').extract(CROP)
+  .resize(512, 512).toFile('src/assets/me.jpg');   // avatar source
+sharp('src/assets/me-source.jpg').extract(CROP)
+  .resize(1200, 1200).toFile('public/me.jpg');     // share card
+```
+
+`public/me.jpg` is served from `public/` rather than `astro:assets` because
+`og:image` needs a URL that does not change between builds.
+
 ## Analytics
 
 Umami Cloud, emitted only in production builds and only when
