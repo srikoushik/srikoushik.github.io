@@ -36,13 +36,40 @@ const MEDIUM_KNOCKOUT = [
   'M836.115 244.625L836.923 244.448V238.195H672.014L518.891 598.084L365.768 238.195H188.059V244.448L188.857 244.625C218.957 251.419 234.239 261.551 234.239 298.091V725.872C234.239 762.412 218.898 772.544 188.798 779.338L188 779.516V785.788H308.57V779.535L307.773 779.358C277.672 772.564 262.39 762.432 262.39 725.892V322.905L459.093 785.788H470.249L672.683 309.996V736.457C670.104 765.317 654.96 774.228 627.705 780.382L626.897 780.569V786.773H836.923V780.569L836.115 780.382C808.831 774.228 793.322 765.317 790.743 736.457L790.605 298.091H790.743C790.743 261.551 806.024 251.419 836.115 244.625Z',
 ];
 
-const HOVER: Record<Profile['icon'], string> = {
-  // Monochrome brands, so their lit state is the theme foreground.
-  github: 'hover:text-foreground',
-  medium: 'hover:text-foreground',
-  // #0A66C2 is too dim against a near-black background, so dark mode uses
-  // LinkedIn's lighter UI blue.
-  linkedin: 'hover:text-[#0A66C2] dark:hover:text-[#70B5F9]',
+/**
+ * Optical sizing.
+ *
+ * Each mark pads its artwork differently, so equal box sizes produce unequal
+ * visual weight. Measured ink coverage of each source viewBox:
+ *   github   96% x 93%
+ *   linkedin 88% x 81%
+ *   medium   100% x 100% (a solid square)
+ *
+ * At a shared 20px box LinkedIn rendered ~19% smaller than Medium. `viewBox`
+ * below is cropped to each mark's actual ink so they normalise to the same
+ * drawn height, and `height` then applies an optical correction: a solid
+ * square reads heavier than an open letterform at identical measurements, so
+ * Medium is set smaller on purpose. Widths follow from the aspect ratio.
+ */
+const ICONS: Record<Profile['icon'], { viewBox: string; height: string; hover: string }> = {
+  linkedin: {
+    viewBox: '1.5 3 21 19.5',
+    height: 'h-5',
+    // #0A66C2 is too dim against a near-black background, so dark mode uses
+    // LinkedIn's lighter UI blue.
+    hover: 'hover:text-[#0A66C2] dark:hover:text-[#70B5F9]',
+  },
+  medium: {
+    viewBox: '0 0 1024 1024',
+    height: 'h-[17px]',
+    // Monochrome brand, so its lit state is the theme foreground.
+    hover: 'hover:text-foreground',
+  },
+  github: {
+    viewBox: '0.5 1 23 22.28',
+    height: 'h-[19px]',
+    hover: 'hover:text-foreground',
+  },
 };
 ---
 
@@ -57,19 +84,28 @@ const HOVER: Record<Profile['icon'], string> = {
           data-umami-event={profile.event}
           aria-label={profile.label}
           class:list={[
-            'text-muted-foreground focus-visible:ring-ring/50 block rounded-sm transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none',
-            HOVER[profile.icon],
+            'text-muted-foreground focus-visible:ring-ring/50 flex size-6 items-center justify-center rounded-sm transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none',
+            ICONS[profile.icon].hover,
           ]}
         >
           {profile.icon === 'medium' ? (
-            <svg viewBox="0 0 1024 1024" class="size-5" aria-hidden="true">
+            <svg
+              viewBox={ICONS.medium.viewBox}
+              class:list={[ICONS.medium.height, 'w-auto']}
+              aria-hidden="true"
+            >
               <rect width="1024" height="1024" rx="179.649" fill="currentColor" />
               {MEDIUM_KNOCKOUT.map((d) => (
                 <path d={d} fill="var(--background)" />
               ))}
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="currentColor" class="size-5" aria-hidden="true">
+            <svg
+              viewBox={ICONS[profile.icon].viewBox}
+              fill="currentColor"
+              class:list={[ICONS[profile.icon].height, 'w-auto']}
+              aria-hidden="true"
+            >
               <path d={GLYPHS[profile.icon]} />
             </svg>
           )}
