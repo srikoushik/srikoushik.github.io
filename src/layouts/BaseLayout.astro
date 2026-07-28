@@ -29,6 +29,27 @@ const { title, description } = Astro.props;
     />
     <title>{title}</title>
     <meta name="description" content={description} />
+
+    {/*
+      Resolves the theme synchronously during head parsing, before the body
+      exists. Deferring this to a bundled script would paint a light frame
+      first and then correct it — a visible flash on every load.
+    */}
+    <script is:inline>
+      (function () {
+        var preference = 'system';
+        try {
+          preference = window.localStorage.getItem('theme') || 'system';
+        } catch (error) {
+          /* storage blocked — fall back to system */
+        }
+        var dark =
+          preference === 'dark' ||
+          (preference === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+      })();
+    </script>
   </head>
   <body>
     <slot />

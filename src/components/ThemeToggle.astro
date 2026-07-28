@@ -1,0 +1,127 @@
+---
+import { buttonVariants } from '@/components/ui/button';
+
+// Deliberately not a React island. This is the site's only interactive
+// element; hydrating React for one button would ship ~45 KB gzipped to a
+// page that is otherwise pure text. Reusing `buttonVariants` keeps the
+// shadcn styling without the runtime.
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  data-preference="system"
+  aria-label="Switch theme"
+  class={buttonVariants({ variant: 'ghost', size: 'icon' })}
+>
+  <svg
+    data-icon-for="light"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+  </svg>
+
+  <svg
+    data-icon-for="dark"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+  </svg>
+
+  <svg
+    data-icon-for="system"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <rect width="20" height="14" x="2" y="3" rx="2"></rect>
+    <path d="M8 21h8M12 17v4"></path>
+  </svg>
+
+  <span class="sr-only" data-theme-label>System theme</span>
+</button>
+
+<style>
+  /* Show only the icon matching the current preference. Driven by the
+     data attribute so no JavaScript is needed to pick the icon. */
+  [data-theme-toggle] svg {
+    display: none;
+  }
+  [data-theme-toggle][data-preference='light'] svg[data-icon-for='light'],
+  [data-theme-toggle][data-preference='dark'] svg[data-icon-for='dark'],
+  [data-theme-toggle][data-preference='system'] svg[data-icon-for='system'] {
+    display: block;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var toggle = document.querySelector('[data-theme-toggle]');
+    if (!toggle) return;
+
+    var ORDER = ['light', 'dark', 'system'];
+    var LABELS = { light: 'Light theme', dark: 'Dark theme', system: 'System theme' };
+    var media = window.matchMedia('(prefers-color-scheme: dark)');
+    var label = toggle.querySelector('[data-theme-label]');
+
+    // Storage can throw outright in blocked-storage contexts, so every
+    // access is guarded and the site degrades to session-only behaviour.
+    function readPreference() {
+      try {
+        var stored = window.localStorage.getItem('theme');
+        return ORDER.indexOf(stored) === -1 ? 'system' : stored;
+      } catch (error) {
+        return 'system';
+      }
+    }
+
+    function writePreference(preference) {
+      try {
+        window.localStorage.setItem('theme', preference);
+      } catch (error) {
+        /* session-only */
+      }
+    }
+
+    function apply(preference) {
+      var dark = preference === 'dark' || (preference === 'system' && media.matches);
+      document.documentElement.classList.toggle('dark', dark);
+      toggle.setAttribute('data-preference', preference);
+      if (label) label.textContent = LABELS[preference];
+    }
+
+    apply(readPreference());
+
+    toggle.addEventListener('click', function () {
+      // Persist the literal choice, never the resolved theme — storing
+      // "dark" for a system preference would destroy the system option.
+      var next = ORDER[(ORDER.indexOf(readPreference()) + 1) % ORDER.length];
+      writePreference(next);
+      apply(next);
+    });
+
+    media.addEventListener('change', function () {
+      if (readPreference() === 'system') apply('system');
+    });
+  })();
+</script>
