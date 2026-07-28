@@ -33,6 +33,16 @@ export interface SiteContent {
   elsewhere: SocialLink[];
   /** Omit or leave empty and the Contact section is not rendered. */
   email?: string;
+  /** Used as `jobTitle` in the Person structured data. */
+  jobTitle: string;
+  /**
+   * Share-card image, site-root-relative. Served from `public/` rather than
+   * astro:assets on purpose: crawlers and social scrapers need a stable URL,
+   * and processed assets carry a content hash that changes between builds.
+   */
+  ogImage: string;
+  /** Carried over from the previous site — removing it breaks Search Console. */
+  googleSiteVerification: string;
 }
 
 export const site: SiteContent = {
@@ -89,4 +99,13 @@ export const site: SiteContent = {
   // TODO(koushik): add the address you want recruiters to use, or delete
   // this line and the Contact section falls away on its own.
   email: '',
+
+  jobTitle: 'Software Engineer',
+
+  // TODO(koushik): this is currently the square profile photo, which pairs
+  // with Twitter's `summary` card. Supply a designed 1200x630 card and switch
+  // the card type to `summary_large_image` in Seo.astro for a wide preview.
+  ogImage: '/me.jpg',
+
+  googleSiteVerification: '3E6n8pS7eidjtwTD4pma59fyB7674Hw6Eez5r-HLDIU',
 };
