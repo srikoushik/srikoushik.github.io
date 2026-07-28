@@ -64,11 +64,15 @@ silently destroy the system option.
 theme tokens live in `src/styles/global.css`. Dark mode keys off a `dark`
 class on `<html>`.
 
-**The palette and typeface deliberately reproduce the previous site** —
-monospace throughout, and dark mode is its exact `bg-gray-700` (#4a5568)
-behind `text-gray-200` (#edf2f7). Light mode is that family inverted, since
-the old site had no light variant. The accent is darkened from the old
-`blue-500` to `#2b6cb0`: the original pairing failed WCAG AA at 2.48:1.
+**The palette deliberately reproduces the previous site** — dark mode is its
+exact `bg-gray-700` (#4a5568) behind `text-gray-200` (#edf2f7). Light mode
+is that family inverted, since the old site had no light variant. The accent
+is darkened from the old `blue-500` to `#2b6cb0`: the original pairing
+failed WCAG AA at 2.48:1.
+
+**Typography is Nunito Sans, not the old site's monospace.** That is a
+deliberate departure — the layout and colours are reproduced, the typeface
+is not.
 
 **Adding shadcn components:** `npx shadcn@latest add <name>`. They land in
 `src/components/ui/` as source you own.

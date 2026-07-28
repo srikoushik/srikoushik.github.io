@@ -10,6 +10,19 @@
 @import "tw-animate-css";
 
 /*
+ * Nunito Sans, weight axis only.
+ *
+ * The family also ships width, optical-size and italic axes; importing those
+ * would declare a large set of @font-face rules for variants this design
+ * never uses. `wght.css` covers 200-1000 in one file.
+ *
+ * It declares five subsets (latin, latin-ext, cyrillic, cyrillic-ext,
+ * vietnamese), each gated by `unicode-range`, so an English page downloads
+ * only the ~31 KB latin file.
+ */
+@import "@fontsource-variable/nunito-sans/wght.css";
+
+/*
  * shadcn keys dark mode off a `.dark` class on the root element.
  * The theme toggle is the only thing that writes it, so there is a single
  * source of truth for the resolved theme.
@@ -17,15 +30,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /*
-   * Monospace throughout, matching the previous site's `font-mono`. System
-   * stack rather than a webfont: it costs no download and renders in the
-   * face each platform already tunes for code.
-   */
   --font-heading: var(--font-sans);
   --font-sans:
-    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
-    'Liberation Mono', monospace;
+    'Nunito Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

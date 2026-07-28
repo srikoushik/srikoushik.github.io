@@ -2,6 +2,11 @@
 import '@/styles/global.css';
 import Seo from '@/components/Seo.astro';
 
+// Imported for its hashed build URL so the latin subset can be preloaded.
+// Without this the browser only discovers the font after parsing the
+// stylesheet, which delays first text paint.
+import nunitoSansLatin from '@fontsource-variable/nunito-sans/files/nunito-sans-latin-wght-normal.woff2?url';
+
 interface Props {
   title: string;
   description: string;
@@ -26,6 +31,13 @@ const trackingEnabled = import.meta.env.PROD && Boolean(umamiWebsiteId);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.ico" />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={nunitoSansLatin}
+      crossorigin
+    />
     <Seo title={title} description={description} noindex={noindex} />
 
     {/*
