@@ -1,7 +1,7 @@
 ---
 title: "feat: Rebuild portfolio as an Astro one-pager with shadcn/ui"
 type: feat
-status: active
+status: completed
 date: 2026-07-26
 ---
 
