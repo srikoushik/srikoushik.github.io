@@ -18,7 +18,7 @@ export interface Profile {
   /** Used as the link's accessible name, since the icon carries no text. */
   label: string;
   href: string;
-  icon: 'github' | 'linkedin' | 'medium';
+  icon: 'github' | 'linkedin';
   /** Umami event name. Keep stable — renaming fragments historical data. */
   event: string;
 }
@@ -86,12 +86,6 @@ export const site: SiteContent = {
       href: 'https://www.linkedin.com/in/srikoushik/',
       icon: 'linkedin',
       event: 'outbound-linkedin',
-    },
-    {
-      label: 'Medium — writing',
-      href: 'https://medium.com/@srikoushik',
-      icon: 'medium',
-      event: 'outbound-medium',
     },
     {
       label: 'GitHub — code',

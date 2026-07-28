@@ -8,66 +8,35 @@ interface Props {
 const { profiles } = Astro.props;
 
 /**
- * Brand marks, inlined as SVG. Sourcing differs by vendor:
+ * Brand marks, inlined as SVG.
  *
  *   github   — GitHub's own @primer/octicons (`mark-github`).
- *   medium   — Medium-Icon-Black.svg from the asset package linked off
- *              medium.design's brand guidelines. Paths used verbatim.
  *   linkedin — LinkedIn publishes the "in" bug as PNG only (brand.linkedin.com
  *              ships 840x779 rasters, no vector). A raster cannot inherit
  *              `currentColor`, which the grey-to-brand hover needs, so this is
  *              a vector glyph in LinkedIn's proportions.
  *
- * GitHub and LinkedIn are single-shape glyphs. Medium's official mark is a
- * filled rounded square with the M knocked out, so it is drawn as a box in
- * `currentColor` with the knockout in `--background` — the same grey-to-lit
- * hover as the others, without altering the official artwork.
+ * `viewBox` is cropped to each mark's actual ink rather than left at the
+ * artwork's own bounds, which pad differently — GitHub fills 96%x93% of its
+ * source box, LinkedIn only 88%x81%, so at a shared size LinkedIn rendered
+ * noticeably smaller. `height` then applies a small optical correction:
+ * GitHub's mark is a dense round blob and reads heavier than LinkedIn's open
+ * letterform, so it is set marginally smaller. Widths follow the aspect ratio.
  */
-const GLYPHS = {
-  github:
-    'M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943',
-  linkedin:
-    'M9 9h4.151v2.128h.059C13.787 10.092 15.201 9 17.308 9c4.382 0 5.192 2.728 5.192 6.275V22.5h-4.327v-6.405c0-1.528-.031-3.493-2.251-3.493-2.253 0-2.597 1.664-2.597 3.382V22.5H9V9zM1.5 9H6v13.5H1.5V9zM6 5.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
-} as const;
-
-/** Medium's official mark, knocked out of a rounded square. */
-const MEDIUM_KNOCKOUT = [
-  'M1024 704.736V797.736C1018.16 798.3 1012.16 798.588 1006 798.588C896.061 798.588 834.166 707.016 831.497 592.432C831.418 588.002 831.448 583.6 831.546 579.228C831.606 576.501 831.714 573.783 831.852 571.075C831.921 569.628 831.989 568.269 832.098 566.753C832.206 565.236 832.315 563.72 832.443 562.204C836.401 511.613 852.687 466.594 879.568 433.284C896.267 412.606 916.334 396.852 939.09 386.316C959.078 376.253 987.17 370.699 1010.07 370.699H1011.06C1015.4 370.699 1019.71 370.844 1024 371.13V396.717C1019.45 395.47 1014.58 394.801 1009.4 394.715C963.086 395.67 935.486 451.145 932.049 528.007H1024V549.669H929.972L929.942 549.689C925.703 624.579 966.692 687.87 1024 704.736Z',
-  'M836.115 244.625L836.923 244.448V238.195H672.014L518.891 598.084L365.768 238.195H188.059V244.448L188.857 244.625C218.957 251.419 234.239 261.551 234.239 298.091V725.872C234.239 762.412 218.898 772.544 188.798 779.338L188 779.516V785.788H308.57V779.535L307.773 779.358C277.672 772.564 262.39 762.432 262.39 725.892V322.905L459.093 785.788H470.249L672.683 309.996V736.457C670.104 765.317 654.96 774.228 627.705 780.382L626.897 780.569V786.773H836.923V780.569L836.115 780.382C808.831 774.228 793.322 765.317 790.743 736.457L790.605 298.091H790.743C790.743 261.551 806.024 251.419 836.115 244.625Z',
-];
-
-/**
- * Optical sizing.
- *
- * Each mark pads its artwork differently, so equal box sizes produce unequal
- * visual weight. Measured ink coverage of each source viewBox:
- *   github   96% x 93%
- *   linkedin 88% x 81%
- *   medium   100% x 100% (a solid square)
- *
- * At a shared 20px box LinkedIn rendered ~19% smaller than Medium. `viewBox`
- * below is cropped to each mark's actual ink so they normalise to the same
- * drawn height, and `height` then applies an optical correction: a solid
- * square reads heavier than an open letterform at identical measurements, so
- * Medium is set smaller on purpose. Widths follow from the aspect ratio.
- */
-const ICONS: Record<Profile['icon'], { viewBox: string; height: string; hover: string }> = {
+const ICONS: Record<Profile['icon'], { viewBox: string; height: string; path: string; hover: string }> = {
   linkedin: {
     viewBox: '1.5 3 21 19.5',
     height: 'h-5',
+    path: 'M9 9h4.151v2.128h.059C13.787 10.092 15.201 9 17.308 9c4.382 0 5.192 2.728 5.192 6.275V22.5h-4.327v-6.405c0-1.528-.031-3.493-2.251-3.493-2.253 0-2.597 1.664-2.597 3.382V22.5H9V9zM1.5 9H6v13.5H1.5V9zM6 5.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
     // #0A66C2 is too dim against a near-black background, so dark mode uses
     // LinkedIn's lighter UI blue.
     hover: 'hover:text-[#0A66C2] dark:hover:text-[#70B5F9]',
   },
-  medium: {
-    viewBox: '0 0 1024 1024',
-    height: 'h-[17px]',
-    // Monochrome brand, so its lit state is the theme foreground.
-    hover: 'hover:text-foreground',
-  },
   github: {
     viewBox: '0.5 1 23 22.28',
     height: 'h-[19px]',
+    path: 'M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943',
+    // Monochrome brand, so its lit state is the theme foreground.
     hover: 'hover:text-foreground',
   },
 };
@@ -88,27 +57,14 @@ const ICONS: Record<Profile['icon'], { viewBox: string; height: string; hover: s
             ICONS[profile.icon].hover,
           ]}
         >
-          {profile.icon === 'medium' ? (
-            <svg
-              viewBox={ICONS.medium.viewBox}
-              class:list={[ICONS.medium.height, 'w-auto']}
-              aria-hidden="true"
-            >
-              <rect width="1024" height="1024" rx="179.649" fill="currentColor" />
-              {MEDIUM_KNOCKOUT.map((d) => (
-                <path d={d} fill="var(--background)" />
-              ))}
-            </svg>
-          ) : (
-            <svg
-              viewBox={ICONS[profile.icon].viewBox}
-              fill="currentColor"
-              class:list={[ICONS[profile.icon].height, 'w-auto']}
-              aria-hidden="true"
-            >
-              <path d={GLYPHS[profile.icon]} />
-            </svg>
-          )}
+          <svg
+            viewBox={ICONS[profile.icon].viewBox}
+            fill="currentColor"
+            class:list={[ICONS[profile.icon].height, 'w-auto']}
+            aria-hidden="true"
+          >
+            <path d={ICONS[profile.icon].path} />
+          </svg>
         </a>
       </li>
     ))

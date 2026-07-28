@@ -65,7 +65,6 @@ test.describe('structured data', () => {
     const sameAs: string[] = JSON.parse(raw!).mainEntity.sameAs;
 
     expect(sameAs.some((url) => url.includes('linkedin.com'))).toBe(true);
-    expect(sameAs.some((url) => url.includes('medium.com'))).toBe(true);
     expect(sameAs.some((url) => url.includes('github.com'))).toBe(true);
 
     // Structured data disagreeing with the rendered page is worse than none.
