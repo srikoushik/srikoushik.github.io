@@ -61,11 +61,10 @@
 }
 
 /*
- * Palette carried over from the previous site, which used Tailwind 1's
- * default scale. Dark mode reproduces it exactly — `bg-gray-700` (#4a5568)
- * behind `text-gray-200` (#edf2f7), with `blue-500` (#4299e1) as the accent.
- * Light mode is the same family inverted, since the old site had no light
- * variant to copy.
+ * Palette drawn from Tailwind 1's scale, the same family the previous site
+ * used. Dark mode goes darker than that site's mid-tone `bg-gray-700`,
+ * sitting on `gray-900` (#1a202c) behind `gray-200` (#edf2f7); the old slate
+ * is kept as the border tone. Light mode is the same family inverted.
  */
 :root {
   --background: #f7fafc;
@@ -90,24 +89,24 @@
 }
 
 .dark {
-  --background: #4a5568;
+  --background: #1a202c;
   --foreground: #edf2f7;
-  --card: #3d4759;
+  --card: #2d3748;
   --card-foreground: #edf2f7;
-  --popover: #3d4759;
+  --popover: #2d3748;
   --popover-foreground: #edf2f7;
   --primary: #edf2f7;
-  --primary-foreground: #2d3748;
-  --secondary: #5a6678;
+  --primary-foreground: #1a202c;
+  --secondary: #2d3748;
   --secondary-foreground: #edf2f7;
-  --muted: #5a6678;
-  --muted-foreground: #cbd5e0;
-  --accent: #2b6cb0;
-  --accent-foreground: #ffffff;
+  --muted: #2d3748;
+  --muted-foreground: #a0aec0;
+  --accent: #4299e1;
+  --accent-foreground: #1a202c;
   --destructive: #fc8181;
-  --border: #718096;
-  --input: #718096;
-  --ring: #90cdf4;
+  --border: #4a5568;
+  --input: #4a5568;
+  --ring: #63b3ed;
 }
 
 @layer base {
