@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Section from '@/components/Section.astro';
-import SocialLinks from '@/components/SocialLinks.astro';
+import SocialIcons from '@/components/SocialIcons.astro';
 import ThemeToggle from '@/components/ThemeToggle.astro';
 import { site } from '@/content/site';
 ---
@@ -26,6 +26,7 @@ import { site } from '@/content/site';
         <div>
           <h1 class="text-2xl font-semibold tracking-tight">{site.name}</h1>
           <p class="text-muted-foreground text-sm">{site.identity}</p>
+          <SocialIcons profiles={site.profiles} />
         </div>
       </div>
       <ThemeToggle />
@@ -77,9 +78,6 @@ import { site } from '@/content/site';
         )
       }
 
-      <Section title="Elsewhere">
-        <SocialLinks links={site.elsewhere} />
-      </Section>
 
       {
         site.email && (

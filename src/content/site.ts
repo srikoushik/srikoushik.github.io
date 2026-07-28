@@ -14,9 +14,11 @@ export interface ExperienceEntry {
   summary: string;
 }
 
-export interface SocialLink {
+export interface Profile {
+  /** Used as the link's accessible name, since the icon carries no text. */
   label: string;
   href: string;
+  icon: 'github' | 'linkedin' | 'medium';
   /** Umami event name. Keep stable — renaming fragments historical data. */
   event: string;
 }
@@ -29,8 +31,8 @@ export interface SiteContent {
   location: string;
   experience: ExperienceEntry[];
   interests: string[];
-  /** Projects and writing link out rather than living on the page. */
-  elsewhere: SocialLink[];
+  /** Rendered as brand icons under the identity line. */
+  profiles: Profile[];
   /** Omit or leave empty and the Contact section is not rendered. */
   email?: string;
   /** Used as `jobTitle` in the Person structured data. */
@@ -76,22 +78,25 @@ export const site: SiteContent = {
   ],
 
   // Each destination appears exactly once, so every Umami event name maps to
-  // a single link. Duplicating a destination across sections would merge two
-  // distinct placements into one statistic.
-  elsewhere: [
+  // a single link. Labels are the accessible names — the icons carry no text,
+  // so these are what a screen reader announces.
+  profiles: [
     {
-      label: 'Projects',
+      label: 'LinkedIn — projects and experience',
       href: 'https://www.linkedin.com/in/srikoushik/',
+      icon: 'linkedin',
       event: 'outbound-linkedin',
     },
     {
-      label: 'Writing',
+      label: 'Medium — writing',
       href: 'https://medium.com/@srikoushik',
+      icon: 'medium',
       event: 'outbound-medium',
     },
     {
-      label: 'Code',
+      label: 'GitHub — code',
       href: 'https://github.com/srikoushik',
+      icon: 'github',
       event: 'outbound-github',
     },
   ],
