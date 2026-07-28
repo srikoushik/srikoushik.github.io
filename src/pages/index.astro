@@ -1,17 +1,98 @@
 ---
+import { Image } from 'astro:assets';
+import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import Section from '@/components/Section.astro';
+import SocialLinks from '@/components/SocialLinks.astro';
 import ThemeToggle from '@/components/ThemeToggle.astro';
+import { site } from '@/content/site';
 ---
 
 <BaseLayout
-  title="Koushik"
-  description="A personal portfolio to share my interests, experience, blog and also to get connected with my active social platforms."
+  title={`${site.name} — ${site.identity}`}
+  description={site.bio[0]}
 >
-  <main class="mx-auto max-w-2xl px-6 py-16">
-    <div class="flex items-start justify-between">
-      <h1 class="text-3xl font-semibold tracking-tight">Koushik</h1>
+  <div class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
+    <header class="flex items-start justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <Image
+          src={avatar}
+          alt={`Portrait of ${site.name}`}
+          width={64}
+          height={64}
+          loading="eager"
+          class="border-border size-16 rounded-full border object-cover"
+        />
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">{site.name}</h1>
+          <p class="text-muted-foreground text-sm">{site.identity}</p>
+        </div>
+      </div>
       <ThemeToggle />
-    </div>
-    <p class="text-muted-foreground mt-2">Software engineer.</p>
-  </main>
+    </header>
+
+    <main>
+      <div class="mt-10 space-y-4 leading-relaxed">
+        {site.bio.map((paragraph) => <p>{paragraph}</p>)}
+        <p class="text-muted-foreground">{site.location}</p>
+      </div>
+
+      {
+        site.experience.length > 0 && (
+          <Section title="Experience">
+            <ol class="space-y-6">
+              {site.experience.map((entry) => (
+                <li>
+                  <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                    <h3 class="font-medium">
+                      {entry.role}
+                      <span class="text-muted-foreground font-normal">
+                        {' · '}
+                        {entry.organisation}
+                      </span>
+                    </h3>
+                    <span class="text-muted-foreground text-sm tabular-nums">
+                      {entry.period}
+                    </span>
+                  </div>
+                  <p class="text-muted-foreground mt-1 leading-relaxed">
+                    {entry.summary}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        )
+      }
+
+      {
+        site.interests.length > 0 && (
+          <Section title="Interests">
+            <div class="space-y-3 leading-relaxed">
+              {site.interests.map((interest) => (
+                <p>{interest}</p>
+              ))}
+            </div>
+          </Section>
+        )
+      }
+
+      <Section title="Elsewhere">
+        <SocialLinks links={site.elsewhere} />
+      </Section>
+
+      {
+        site.email && (
+          <Section title="Contact">
+            <a
+              href={`mailto:${site.email}`}
+              class="decoration-muted-foreground/40 hover:decoration-foreground underline underline-offset-4 transition-colors"
+            >
+              {site.email}
+            </a>
+          </Section>
+        )
+      }
+    </main>
+  </div>
 </BaseLayout>

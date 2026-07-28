@@ -1,0 +1,92 @@
+/**
+ * All page copy lives here so text can be edited without touching layout.
+ *
+ * A content collection would be overkill for a single page — this is a plain
+ * typed module, and TypeScript fails the build if an entry is malformed.
+ */
+
+export interface ExperienceEntry {
+  role: string;
+  organisation: string;
+  /** Free-form, e.g. "2021 — Present". Rendered verbatim. */
+  period: string;
+  /** One or two sentences. What you owned and what it achieved. */
+  summary: string;
+}
+
+export interface SocialLink {
+  label: string;
+  href: string;
+  /** Umami event name. Keep stable — renaming fragments historical data. */
+  event: string;
+}
+
+export interface SiteContent {
+  name: string;
+  /** The single line under the name. Keep it to one line. */
+  identity: string;
+  bio: string[];
+  location: string;
+  experience: ExperienceEntry[];
+  interests: string[];
+  /** Projects and writing link out rather than living on the page. */
+  elsewhere: SocialLink[];
+  /** Omit or leave empty and the Contact section is not rendered. */
+  email?: string;
+}
+
+export const site: SiteContent = {
+  name: 'Koushik',
+
+  // TODO(koushik): replace with your own one-liner.
+  identity: 'Software engineer',
+
+  bio: [
+    'As a software engineer, I am involved in building applications from scratch, designing application architecture and onboarding new team members.',
+  ],
+
+  location: 'Chennai by native, living in Bangalore.',
+
+  // TODO(koushik): replace these placeholders with your real roles.
+  // Deliberately left as obvious placeholders rather than invented history —
+  // this is the section a hiring reader weighs most heavily.
+  experience: [
+    {
+      role: 'TODO — your role',
+      organisation: 'TODO — organisation',
+      period: 'TODO — e.g. 2021 — Present',
+      summary:
+        'TODO — one or two sentences on what you owned and what it achieved. Concrete beats comprehensive.',
+    },
+  ],
+
+  interests: [
+    'Working with scalable distributed systems and practicing functional programming are my current interests.',
+    'In my free time, I do adventure travel and scribble blogs.',
+  ],
+
+  // Each destination appears exactly once, so every Umami event name maps to
+  // a single link. Duplicating a destination across sections would merge two
+  // distinct placements into one statistic.
+  elsewhere: [
+    {
+      label: 'Projects',
+      href: 'https://www.linkedin.com/in/srikoushik/',
+      event: 'outbound-linkedin',
+    },
+    {
+      label: 'Writing',
+      href: 'https://medium.com/@srikoushik',
+      event: 'outbound-medium',
+    },
+    {
+      label: 'Code',
+      href: 'https://github.com/srikoushik',
+      event: 'outbound-github',
+    },
+  ],
+
+  // TODO(koushik): add the address you want recruiters to use, or delete
+  // this line and the Contact section falls away on its own.
+  email: '',
+};
