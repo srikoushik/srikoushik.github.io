@@ -25,7 +25,7 @@ const structuredData = {
   mainEntity: {
     '@type': 'Person',
     name: site.name,
-    description: site.bio[0],
+    description: site.bio[0].text,
     image: ogImage.href,
     jobTitle: site.jobTitle,
     url: Astro.site?.href,
@@ -54,8 +54,14 @@ const structuredData = {
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage.href} />
 
+{/*
+  `set:html` does not escape, and JSON.stringify leaves `/` alone — so a
+  `</script>` anywhere in the content would close this block early and turn
+  the rest into live markup. The < escape is still valid JSON, and every
+  JSON-LD parser reads it back as an ordinary `<`.
+*/}
 <script
   type="application/ld+json"
   is:inline
-  set:html={JSON.stringify(structuredData)}
+  set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')}
 />
