@@ -61,6 +61,14 @@ import { site } from '@/content/site';
         Tap targets on phones, inline underlined links on desktop. The 48px
         minimum height is what makes the mobile rows reachable; desktop drops
         the box entirely and keeps only the hairline rule beneath each label.
+
+        About is the card's primary action, so on mobile it carries the solid
+        border and full-strength ink the outbound rows do not, and dims on
+        press. Desktop needs the opposite direction: it rests at
+        `muted-foreground` like its neighbours, so it has to brighten to
+        `foreground` on hover the way they do. Dimming there — the earlier
+        `text-foreground/70` — composited to within a few percent of the
+        resting ink in both themes, which read as a link that does nothing.
       */}
       <nav
         class="mt-[12px] flex w-full flex-col gap-[10px] text-[14px] sm:mt-[8px] sm:w-auto sm:flex-row sm:items-end sm:gap-[22px] sm:text-[15px]"
@@ -69,7 +77,7 @@ import { site } from '@/content/site';
         <a
           href="/about"
           data-umami-event="nav-about"
-          class="border-foreground text-foreground hover:text-foreground/70 flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:text-muted-foreground sm:min-h-0 sm:justify-start sm:rounded-none sm:border-0 sm:border-b sm:border-border sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
+          class="border-foreground text-foreground hover:text-foreground/70 flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:text-muted-foreground sm:hover:text-foreground sm:min-h-0 sm:justify-start sm:rounded-none sm:border-0 sm:border-b sm:border-border sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
         >
           <span>About</span>
           <span aria-hidden="true" class="sm:hidden">→</span>
