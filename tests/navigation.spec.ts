@@ -17,10 +17,10 @@ test.describe('card to About and back', () => {
     await page.getByRole('link', { name: 'About' }).click();
     await expect(page).toHaveURL(/\/about\/?$/);
     await expect(
-      page.getByText('As an engineer, I design and build systems'),
+      page.getByText('I’ve spent over a decade designing systems'),
     ).toBeVisible();
 
-    await page.getByRole('link', { name: '← Back' }).click();
+    await page.getByRole('link', { name: 'Home' }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Koushik');
   });
@@ -86,6 +86,37 @@ test.describe('responsive treatment', () => {
       return { bottom: cs.borderBottomWidth, top: cs.borderTopWidth, radius: cs.borderRadius };
     });
     expect(borders).toEqual({ bottom: '1px', top: '0px', radius: '0px' });
+  });
+
+  // About rests at the same ink as the outbound links on desktop, so it has to
+  // highlight like them. It shipped hovering to `foreground/70`, which over
+  // either page background composited to within a few percent of that resting
+  // ink — the colour did change, just not visibly. Comparing against a
+  // neighbour rather than a literal keeps this about the design rule.
+  test('highlights About on hover, in both themes', async ({ page }) => {
+    await page.setViewportSize(DESKTOP);
+
+    for (const scheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('/');
+      // The colour transition would otherwise be read mid-flight.
+      await page.addStyleTag({ content: '* { transition: none !important }' });
+
+      const about = page.getByRole('link', { name: 'About' });
+      const neighbour = page.getByRole('link', { name: /LinkedIn/ });
+      const ink = (link: typeof about) =>
+        link.evaluate((el) => getComputedStyle(el).color);
+
+      const resting = await ink(about);
+      await about.hover();
+      const hovered = await ink(about);
+      expect(hovered, `About does not visibly change on hover in ${scheme}`).not.toBe(resting);
+
+      await neighbour.hover();
+      expect(hovered, `About highlights to a different ink than its neighbours in ${scheme}`).toBe(
+        await ink(neighbour),
+      );
+    }
   });
 
   // Regressed once already, back when the control was built on a class-variant

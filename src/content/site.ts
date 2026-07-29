@@ -31,14 +31,15 @@ export interface Link {
 export interface BioParagraph {
   /**
    * Optional bold lead-in, rendered inline before the text — the design uses
-   * it once, for "Interests." Written separately rather than as inline
-   * markup so the copy stays plain strings and needs no HTML escaping.
+   * it once, for "Now." Written separately rather than as inline markup so
+   * the copy stays plain strings and needs no HTML escaping.
    */
   lead?: string;
   text: string;
 }
 
-export interface StackRow {
+/** One row of a `LabeledRows` section — the tech stack and the interests. */
+export interface LabeledRow {
   /** Left column. Recedes behind the value it labels. */
   label: string;
   /** Right column. Free-form, comma-separated. */
@@ -57,7 +58,9 @@ export interface SiteContent {
   homeDescription: string;
   aboutDescription: string;
   bio: BioParagraph[];
-  stack: StackRow[];
+  /** Feeds `knowsAbout` in the structured data as well as the About page. */
+  stack: LabeledRow[];
+  interests: LabeledRow[];
   /** Rendered as text links on the home card, and used as `sameAs`. */
   profiles: Link[];
   /** Rendered in the About page footer. */
@@ -99,10 +102,12 @@ export const site: SiteContent = {
     'About Koushik — a software engineer working with TypeScript, Node.js, React and AWS, and building teams that deliver.',
 
   bio: [
-    { text: 'As an engineer, I design and build systems. I build teams that deliver.' },
     {
-      lead: 'Interests.',
-      text: 'Building platforms and scalable distributed systems. Currently learning functional programming with OCaml.',
+      text: 'I’ve spent over a decade designing systems and building software. Five years at a B2C startup as the founding engineer, then six at a B2B SaaS company — where I built the team from scratch and own what it ships, now past 450 customers.',
+    },
+    {
+      lead: 'Now.',
+      text: 'Building workflow platforms where a person and an agent are the same kind of user.',
     },
   ],
 
@@ -111,6 +116,12 @@ export const site: SiteContent = {
     { label: 'Technologies', value: 'Node.js, React' },
     { label: 'Databases', value: 'MongoDB, PostgreSQL' },
     { label: 'DevOps & infra', value: 'AWS, Docker' },
+  ],
+
+  interests: [
+    { label: 'Learning', value: 'Functional programming with OCaml' },
+    { label: 'Training', value: 'Kettlebells' },
+    { label: 'Seasonal', value: 'Swimming, Running, Motorcycle touring, Hiking' },
   ],
 
   // These two are the `sameAs` set in the structured data, so they must be
