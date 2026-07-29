@@ -10,16 +10,10 @@
  */
 import sharp from 'sharp';
 import { site } from '../src/content/site.ts';
+import { circleMask, INK, INK_FAINT, INK_SOFT, PAPER } from './lib/design.mjs';
 
 const WIDTH = site.ogImageWidth;
 const HEIGHT = site.ogImageHeight;
-
-// sRGB stand-ins for the light-theme oklch tokens (same values theme-color
-// uses in BaseLayout).
-const PAPER = '#f9f6f2';
-const INK = '#453f38';
-const INK_SOFT = '#7b7267';
-const INK_FAINT = '#a29a8f';
 
 // The card's visible URL. No page renders it, so it lives here rather than
 // in site.ts — keep it matching `site` in astro.config.mjs.
@@ -56,20 +50,10 @@ if (taglineLines.length > 3) {
 const escapeXml = (text) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// Circular crop of the square portrait, done in sharp rather than in the
-// SVG so librsvg never has to handle a raster clip path.
+// Circular crop of the square portrait — the roundel the whole icon set uses.
 const portrait = await sharp(`public${site.personImage}`)
   .resize(PORTRAIT.size, PORTRAIT.size)
-  .composite([
-    {
-      input: Buffer.from(
-        `<svg width="${PORTRAIT.size}" height="${PORTRAIT.size}">
-           <circle cx="${PORTRAIT.size / 2}" cy="${PORTRAIT.size / 2}" r="${PORTRAIT.size / 2}" fill="#000"/>
-         </svg>`,
-      ),
-      blend: 'dest-in',
-    },
-  ])
+  .composite([{ input: circleMask(PORTRAIT.size), blend: 'dest-in' }])
   .png()
   .toBuffer();
 
