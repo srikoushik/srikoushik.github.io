@@ -128,9 +128,11 @@ test.describe('crawlability and semantics', () => {
     expect(response.status()).toBe(200);
 
     const html = await response.text();
-    expect(html).toContain('As an engineer, I design and build systems');
+    expect(html).toContain('I’ve spent over a decade designing systems');
     expect(html).toContain('Tech stack');
     expect(html).toContain('PostgreSQL');
+    expect(html).toContain('Interests');
+    expect(html).toContain('Kettlebells');
     expect(html).not.toContain('name="robots"');
   });
 

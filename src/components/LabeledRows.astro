@@ -1,0 +1,44 @@
+---
+import type { LabeledRow } from '@/content/site';
+
+/**
+ * A small-caps heading over a two-column list of label/value pairs.
+ *
+ * About renders this twice — the tech stack and the interests — and the two
+ * are the same object visually and semantically, so the layout is stated once
+ * here rather than copied per section.
+ */
+interface Props {
+  title: string;
+  rows: LabeledRow[];
+}
+
+const { title, rows } = Astro.props;
+---
+
+<section class="flex flex-col gap-[14px] sm:gap-[16px]">
+  <h2 class="text-faint text-[10px] tracking-[0.22em] uppercase sm:text-[11px]">
+    {title}
+  </h2>
+
+  {/*
+    A description list, because that is what this is: each label names the
+    values beside it. `sm:contents` dissolves the per-pair wrapper at the
+    breakpoint so the dt/dd become direct grid items and fall into two
+    columns — the wrapper exists only to hold a pair together in the
+    stacked mobile layout, where the row gaps differ within a pair (3px)
+    and between pairs (12px).
+  */}
+  <dl
+    class="flex flex-col gap-[12px] text-[13px] leading-[1.5] sm:grid sm:grid-cols-[150px_1fr] sm:gap-x-[24px] sm:gap-y-[13px] sm:text-[14px]"
+  >
+    {
+      rows.map((row) => (
+        <div class="flex flex-col gap-[3px] sm:contents">
+          <dt class="text-faint">{row.label}</dt>
+          <dd class="text-muted-foreground">{row.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>

@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import LabeledRows from '@/components/LabeledRows.astro';
 import OutboundLink from '@/components/OutboundLink.astro';
 import { site } from '@/content/site';
 
@@ -22,6 +23,21 @@ import { site } from '@/content/site';
   <main
     class="mx-auto flex min-h-dvh w-full max-w-[660px] flex-col gap-[34px] px-[26px] pt-[56px] pb-[44px] sm:gap-[44px] sm:px-0 sm:pt-[76px] sm:pb-[60px]"
   >
+    {/*
+      The way back sits above the content rather than after it: on a page this
+      short the reader meets it before committing to the scroll, and it no
+      longer competes with the outbound links at the foot. Tracked, but in
+      sentence case rather than the eyebrow's caps — it reads as a control,
+      not a label.
+    */}
+    <a
+      href="/"
+      data-umami-event="about-nav-home"
+      class="text-muted-foreground hover:text-foreground -mt-[14px] flex min-h-[48px] w-fit items-center gap-[0.5em] text-[12px] tracking-[0.2em] transition-colors sm:mt-0 sm:min-h-0 sm:px-[2px] sm:text-[13px]"
+    >
+      <span aria-hidden="true">←</span>Home
+    </a>
+
     <header class="flex items-center gap-[16px] sm:gap-[22px]">
       <Image
         src={avatar}
@@ -61,34 +77,15 @@ import { site } from '@/content/site';
       }
     </div>
 
-    <section class="flex flex-col gap-[14px] sm:gap-[16px]">
-      <h2
-        class="text-faint text-[10px] tracking-[0.22em] uppercase sm:text-[11px]"
-      >
-        Tech stack
-      </h2>
+    {/*
+      Interests before the stack, so the page descends from what I've done to
+      what I'm doing to who I am, and only then to what I use. The stack is the
+      footnote — four rows of tooling read as the page's subject if they sit
+      directly under the prose, where attention is highest.
+    */}
+    <LabeledRows title="Interests" rows={site.interests} />
 
-      {/*
-        A description list, because that is what this is: each label names the
-        values beside it. `sm:contents` dissolves the per-pair wrapper at the
-        breakpoint so the dt/dd become direct grid items and fall into two
-        columns — the wrapper exists only to hold a pair together in the
-        stacked mobile layout, where the row gaps differ within a pair (3px)
-        and between pairs (12px).
-      */}
-      <dl
-        class="flex flex-col gap-[12px] text-[13px] leading-[1.5] sm:grid sm:grid-cols-[150px_1fr] sm:gap-x-[24px] sm:gap-y-[13px] sm:text-[14px]"
-      >
-        {
-          site.stack.map((row) => (
-            <div class="flex flex-col gap-[3px] sm:contents">
-              <dt class="text-faint">{row.label}</dt>
-              <dd class="text-muted-foreground">{row.value}</dd>
-            </div>
-          ))
-        }
-      </dl>
-    </section>
+    <LabeledRows title="Tech stack" rows={site.stack} />
 
     {/*
       `mt-auto` pins the footer to the bottom of a short mobile viewport, as
@@ -99,14 +96,6 @@ import { site } from '@/content/site';
       class="border-border mt-auto flex flex-col gap-[10px] border-t pt-[22px] text-[14px] sm:mt-0 sm:flex-row sm:items-end sm:gap-[26px] sm:pt-[14px] sm:text-[15px]"
       aria-label="About"
     >
-      <a
-        href="/"
-        data-umami-event="about-nav-home"
-        class="text-muted-foreground hover:text-foreground order-last flex min-h-[48px] items-center transition-colors sm:order-first sm:min-h-0 sm:px-[2px] sm:py-[8px] sm:leading-[1.4]"
-      >
-        ← Back
-      </a>
-
       {
         site.aboutLinks.map((link) => (
           <OutboundLink link={link} class="sm:py-[8px]" />
