@@ -25,7 +25,7 @@ const { link, class: className } = Astro.props;
 <a
   href={link.href}
   target="_blank"
-  rel="noopener noreferrer"
+  rel={link.relMe ? 'me noopener noreferrer' : 'noopener noreferrer'}
   data-umami-event={link.event}
   class:list={[
     'border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:leading-[1.4]',
