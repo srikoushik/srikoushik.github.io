@@ -1,18 +1,33 @@
 ---
-import { buttonVariants } from '@/components/ui/button';
-
-// Deliberately not a React island. This is the site's only interactive
-// element; hydrating React for one button would ship ~45 KB gzipped to a
-// page that is otherwise pure text. Reusing `buttonVariants` keeps the
-// shadcn styling without the runtime.
+// The site's only interactive element, and deliberately not a React island —
+// hydrating a framework for one button would ship ~45 KB gzipped to a page
+// that is otherwise pure text.
+//
+// Styled directly rather than through shadcn's `buttonVariants`. That helper
+// was the last thing keeping React, radix-ui and cva in the dependency tree,
+// and Tailwind emitted its entire variant matrix — every size, every state,
+// six variants — into the stylesheet for a button that used one hover rule.
+//
+// 38px circle, growing to 44px on touch where it has to clear the tap-target
+// minimum. `cursor-pointer` is explicit because the browser default for
+// <button> is `default`, and the design specifies a pointer.
+const classes = [
+  'inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full',
+  'size-11 sm:size-[38px]',
+  'text-muted-foreground transition-colors outline-none select-none',
+  'hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
+  'focus-visible:ring-3 focus-visible:ring-ring/50',
+  '[&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0',
+].join(' ');
 ---
 
 <button
   type="button"
   data-theme-toggle
   data-preference="system"
-  aria-label="Switch theme"
-  class={buttonVariants({ variant: 'ghost', size: 'icon' })}
+  aria-label="Toggle theme"
+  title="Theme: system"
+  class={classes}
 >
   <svg
     data-icon-for="light"
@@ -20,13 +35,14 @@ import { buttonVariants } from '@/components/ui/button';
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width="1.6"
     stroke-linecap="round"
-    stroke-linejoin="round"
     aria-hidden="true"
   >
-    <circle cx="12" cy="12" r="4"></circle>
-    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+    <circle cx="12" cy="12" r="4.2"></circle>
+    <path
+      d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"
+    ></path>
   </svg>
 
   <svg
@@ -35,12 +51,12 @@ import { buttonVariants } from '@/components/ui/button';
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width="1.6"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"
   >
-    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+    <path d="M20.2 14.6A8.6 8.6 0 1 1 9.4 3.8a6.8 6.8 0 0 0 10.8 10.8z"></path>
   </svg>
 
   <svg
@@ -49,13 +65,13 @@ import { buttonVariants } from '@/components/ui/button';
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width="1.6"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"
   >
-    <rect width="20" height="14" x="2" y="3" rx="2"></rect>
-    <path d="M8 21h8M12 17v4"></path>
+    <rect x="2.8" y="4.2" width="18.4" height="12.4" rx="2"></rect>
+    <path d="M8.6 20.2h6.8"></path>
   </svg>
 
   <span class="sr-only" data-theme-label>System theme</span>
@@ -81,6 +97,7 @@ import { buttonVariants } from '@/components/ui/button';
 
     var ORDER = ['light', 'dark', 'system'];
     var LABELS = { light: 'Light theme', dark: 'Dark theme', system: 'System theme' };
+    var TITLES = { light: 'Theme: light', dark: 'Theme: dark', system: 'Theme: system' };
     var media = window.matchMedia('(prefers-color-scheme: dark)');
     var label = toggle.querySelector('[data-theme-label]');
 
@@ -107,6 +124,7 @@ import { buttonVariants } from '@/components/ui/button';
       var dark = preference === 'dark' || (preference === 'system' && media.matches);
       document.documentElement.classList.toggle('dark', dark);
       toggle.setAttribute('data-preference', preference);
+      toggle.setAttribute('title', TITLES[preference]);
       if (label) label.textContent = LABELS[preference];
     }
 

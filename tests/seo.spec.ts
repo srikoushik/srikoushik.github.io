@@ -88,9 +88,35 @@ test.describe('crawlability and semantics', () => {
     // Fetched without a browser: whatever a crawler sees must already be here.
     const html = await (await request.get('/')).text();
     expect(html).toContain('Koushik');
-    expect(html).toContain('Experience');
-    expect(html).toContain('Interests');
+    expect(html).toContain('I design systems and build teams that ship');
     expect(html).not.toContain('<div id="app"></div>');
+  });
+
+  // The prose moved to its own route rather than staying a client-side view
+  // swap, so the part of the site with actual content has to be reachable
+  // and indexable on its own.
+  test('serves the About prose as a crawlable route', async ({ request }) => {
+    const response = await request.get('/about');
+    expect(response.status()).toBe(200);
+
+    const html = await response.text();
+    expect(html).toContain('As an engineer, I design and build systems');
+    expect(html).toContain('Tech stack');
+    expect(html).toContain('PostgreSQL');
+    expect(html).not.toContain('name="robots"');
+  });
+
+  test('lists both routes in the sitemap', async ({ request }) => {
+    const index = await (await request.get('/sitemap-index.xml')).text();
+
+    // The `<loc>` is the production URL. Requesting it verbatim would leave
+    // the preview server and test the live site instead of this build, so
+    // only the path is reused.
+    const path = new URL(index.match(/<loc>([^<]+sitemap-0\.xml)<\/loc>/)![1]).pathname;
+    const sitemap = await (await request.get(path)).text();
+
+    expect(sitemap).toMatch(new RegExp(`<loc>${ORIGIN}/</loc>`));
+    expect(sitemap).toContain(`${ORIGIN}/about`);
   });
 
   test('serves a noindex 404 page', async ({ page }) => {

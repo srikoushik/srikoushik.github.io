@@ -1,40 +1,58 @@
 /**
  * All page copy lives here so text can be edited without touching layout.
  *
- * A content collection would be overkill for a single page — this is a plain
- * typed module, and TypeScript fails the build if an entry is malformed.
+ * A content collection would be overkill for two pages — this is a plain typed
+ * module, and TypeScript fails the build if an entry is malformed.
  */
-
-export interface ExperienceEntry {
-  role: string;
-  organisation: string;
-  /** Free-form, e.g. "2021 — Present". Rendered verbatim. */
-  period: string;
-  /** One or two sentences. What you owned and what it achieved. */
-  summary: string;
-}
 
 export interface Profile {
   /** Used as the link's accessible name, since the icon carries no text. */
   label: string;
   href: string;
-  icon: 'github' | 'linkedin';
+  /** Shown on the home card. Kept short — it sits in a tight row. */
+  text: string;
   /** Umami event name. Keep stable — renaming fragments historical data. */
+  event: string;
+}
+
+export interface BioParagraph {
+  /**
+   * Optional bold lead-in, rendered inline before the text — the design uses
+   * it once, for "Interests." Written separately rather than as inline
+   * markup so the copy stays plain strings and needs no HTML escaping.
+   */
+  lead?: string;
+  text: string;
+}
+
+export interface StackRow {
+  /** Left column. Recedes behind the value it labels. */
+  label: string;
+  /** Right column. Free-form, comma-separated. */
+  value: string;
+}
+
+export interface AboutLink {
+  text: string;
+  href: string;
+  /**
+   * `↗` marks a link that leaves the site, `→` one that continues within the
+   * same reading. Carried from the design, where the two are used distinctly.
+   */
+  glyph: '↗' | '→';
   event: string;
 }
 
 export interface SiteContent {
   name: string;
-  /** The single line under the name. Keep it to one line. */
+  /** The single line under the name on the home card. Keep it to one line. */
   identity: string;
-  bio: string[];
-  location: string;
-  experience: ExperienceEntry[];
-  interests: string[];
-  /** Rendered as brand icons under the identity line. */
+  bio: BioParagraph[];
+  stack: StackRow[];
+  /** Rendered as text links on the home card, and used as `sameAs`. */
   profiles: Profile[];
-  /** Omit or leave empty and the Contact section is not rendered. */
-  email?: string;
+  /** Rendered in the About page footer. */
+  aboutLinks: AboutLink[];
   /** Used as `jobTitle` in the Person structured data. */
   jobTitle: string;
   /**
@@ -50,54 +68,58 @@ export interface SiteContent {
 export const site: SiteContent = {
   name: 'Koushik',
 
-  // TODO(koushik): replace with your own one-liner.
-  identity: 'Software engineer',
+  identity: 'I design systems and build teams that ship',
 
   bio: [
-    'As a software engineer, I am involved in building applications from scratch, designing application architecture and onboarding new team members.',
-  ],
-
-  location: 'Chennai by native, living in Bangalore.',
-
-  // TODO(koushik): replace these placeholders with your real roles.
-  // Deliberately left as obvious placeholders rather than invented history —
-  // this is the section a hiring reader weighs most heavily.
-  experience: [
+    { text: 'As an engineer, I design and build systems. I build teams that deliver.' },
     {
-      role: 'TODO — your role',
-      organisation: 'TODO — organisation',
-      period: 'TODO — e.g. 2021 — Present',
-      summary:
-        'TODO — one or two sentences on what you owned and what it achieved. Concrete beats comprehensive.',
+      lead: 'Interests.',
+      text: 'Building platforms and scalable distributed systems. Currently learning functional programming with OCaml.',
     },
   ],
 
-  interests: [
-    'Working with scalable distributed systems and practicing functional programming are my current interests.',
-    'In my free time, I do adventure travel and scribble blogs.',
+  stack: [
+    { label: 'Languages', value: 'TypeScript' },
+    { label: 'Technologies', value: 'Node.js, React' },
+    { label: 'Databases', value: 'MongoDB, PostgreSQL' },
+    { label: 'DevOps & infra', value: 'AWS, Docker' },
   ],
 
-  // Each destination appears exactly once, so every Umami event name maps to
-  // a single link. Labels are the accessible names — the icons carry no text,
-  // so these are what a screen reader announces.
+  // These two are the `sameAs` set in the structured data, so they must be
+  // exactly the outbound links rendered on the home page — structured data
+  // that disagrees with the page it describes is worse than none at all.
   profiles: [
     {
       label: 'LinkedIn — projects and experience',
       href: 'https://www.linkedin.com/in/srikoushik/',
-      icon: 'linkedin',
+      text: 'LinkedIn',
       event: 'outbound-linkedin',
     },
     {
       label: 'GitHub — code',
       href: 'https://github.com/srikoushik',
-      icon: 'github',
+      text: 'GitHub',
       event: 'outbound-github',
     },
   ],
 
-  // TODO(koushik): add the address you want recruiters to use, or delete
-  // this line and the Contact section falls away on its own.
-  email: '',
+  // Deeper destinations, surfaced only once a reader has opened About. Their
+  // event names are distinct from the home card's so the two placements stay
+  // separable in the analytics.
+  aboutLinks: [
+    {
+      text: 'Projects',
+      href: 'https://www.linkedin.com/in/srikoushik/details/projects/',
+      glyph: '↗',
+      event: 'about-outbound-projects',
+    },
+    {
+      text: 'Blog',
+      href: 'https://medium.com/@srikoushik',
+      glyph: '→',
+      event: 'about-outbound-blog',
+    },
+  ],
 
   jobTitle: 'Software Engineer',
 

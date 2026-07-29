@@ -8,6 +8,9 @@ import { test, expect } from '@playwright/test';
 
 const CSS_BUDGET_BYTES = 30 * 1024;
 
+/** Every route that ships to users. Link and analytics rules apply to all. */
+const ROUTES = ['/', '/about'];
+
 test('ships no framework JavaScript', async ({ page }) => {
   const scripts: string[] = [];
   page.on('request', (request) => {
@@ -36,18 +39,42 @@ test('keeps CSS within budget', async ({ page, request }) => {
   expect(total, `stylesheets total ${total} bytes uncompressed`).toBeLessThan(CSS_BUDGET_BYTES);
 });
 
-test('gives every outbound link a unique, valid Umami event name', async ({ page }) => {
-  await page.goto('/');
+for (const route of ROUTES) {
+  test(`gives every tracked link on ${route} a unique, valid Umami event name`, async ({
+    page,
+  }) => {
+    await page.goto(route);
 
-  const events = await page
-    .locator('[data-umami-event]')
-    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-umami-event')!));
+    const events = await page
+      .locator('[data-umami-event]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-umami-event')!));
 
-  expect(events.length).toBeGreaterThan(0);
-  // Umami caps event names at 50 characters.
-  for (const event of events) expect(event.length).toBeLessThanOrEqual(50);
-  // Sharing a name across links would merge two placements into one statistic.
-  expect(new Set(events).size, `duplicate event names: ${events.join(', ')}`).toBe(events.length);
+    expect(events.length).toBeGreaterThan(0);
+    // Umami caps event names at 50 characters.
+    for (const event of events) expect(event.length).toBeLessThanOrEqual(50);
+    // Sharing a name across links would merge two placements into one statistic.
+    expect(new Set(events).size, `duplicate event names: ${events.join(', ')}`).toBe(events.length);
+  });
+}
+
+// The same destination appears on both routes (LinkedIn as a profile on the
+// home card, as "Projects" in the About footer). Reusing one event name would
+// make it impossible to tell which placement a reader actually used.
+test('does not reuse an event name across routes', async ({ page }) => {
+  const seen = new Map<string, string>();
+
+  for (const route of ROUTES) {
+    await page.goto(route);
+    const events = await page
+      .locator('[data-umami-event]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-umami-event')!));
+
+    for (const event of events) {
+      expect(seen.get(event), `"${event}" is used on both ${seen.get(event)} and ${route}`)
+        .toBeUndefined();
+      seen.set(event, route);
+    }
+  }
 });
 
 test('omits the tracker when no website ID is configured', async ({ request }) => {
@@ -57,16 +84,38 @@ test('omits the tracker when no website ID is configured', async ({ request }) =
   expect(html).not.toContain('cloud.umami.is');
 });
 
-test('opens outbound links safely', async ({ page }) => {
+for (const route of ROUTES) {
+  test(`opens outbound links on ${route} safely`, async ({ page }) => {
+    await page.goto(route);
+
+    const links = page.locator('a[href^="http"]');
+    const count = await links.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const rel = await links.nth(i).getAttribute('rel');
+      expect(rel, `link ${i} is missing rel`).toContain('noopener');
+      expect(rel).toContain('noreferrer');
+    }
+  });
+}
+
+// The font is the whole visual identity here, so a late or unhinted download
+// is a visibly unstyled page. Guards the preload hint and the `swap` policy.
+test('preloads the latin font subset', async ({ page, request }) => {
   await page.goto('/');
 
-  const links = page.locator('a[href^="http"]');
-  const count = await links.count();
-  expect(count).toBeGreaterThan(0);
+  const preload = page.locator('link[rel="preload"][as="font"]');
+  await expect(preload).toHaveCount(1);
 
-  for (let i = 0; i < count; i++) {
-    const rel = await links.nth(i).getAttribute('rel');
-    expect(rel, `link ${i} is missing rel`).toContain('noopener');
-    expect(rel).toContain('noreferrer');
-  }
+  const href = await preload.getAttribute('href');
+  expect(href).toMatch(/newsreader-latin-.*\.woff2$/);
+  expect((await request.get(href!)).status()).toBe(200);
+
+  const css = await page
+    .locator('link[rel="stylesheet"]')
+    .evaluateAll((nodes) => nodes.map((node) => (node as HTMLLinkElement).href));
+  const sheets = await Promise.all(css.map(async (url) => (await request.get(url)).text()));
+  // Matched loosely because the built CSS is minified (`font-display:swap`).
+  expect(sheets.join('')).toMatch(/font-display:\s*swap/);
 });

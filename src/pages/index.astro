@@ -2,106 +2,91 @@
 import { Image } from 'astro:assets';
 import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import Section from '@/components/Section.astro';
-import SocialIcons from '@/components/SocialIcons.astro';
-import ThemeToggle from '@/components/ThemeToggle.astro';
 import { site } from '@/content/site';
 
-const hasDetail = site.experience.length > 0 || site.interests.length > 0;
+/**
+ * The home card.
+ *
+ * Two compositions from one tree: a centred column on phones, and a
+ * portrait-beside-type row from `sm` up. The design draws these as separate
+ * frames (390x844 and 934x650), but the difference is entirely axis, gap and
+ * link treatment — enough to express in responsive utilities without
+ * duplicating the markup, and without shipping both and hiding one.
+ *
+ * The design's frames centre their content within a fixed box; here the box is
+ * the viewport, so `min-h-dvh` centring reproduces it at any window size.
+ * `dvh` rather than `vh` because mobile browser chrome makes `vh` overshoot,
+ * which would push the card under the URL bar.
+ */
 ---
 
-<BaseLayout title={`${site.name} — ${site.identity}`} description={site.bio[0]}>
-  {/* Floated rather than in flow, so it cannot disturb the centring. */}
-  <div class="fixed top-4 right-4 z-10">
-    <ThemeToggle />
-  </div>
+<BaseLayout title={`${site.name} — ${site.identity}`} description={site.identity}>
+  <main
+    class="flex min-h-dvh flex-col items-center justify-center px-[22px] sm:flex-row sm:gap-[44px] sm:px-12"
+  >
+    <Image
+      src={avatar}
+      alt={`Portrait of ${site.name}`}
+      width={176}
+      height={176}
+      densities={[1, 2]}
+      loading="eager"
+      class="shadow-float-sm sm:shadow-float size-[172px] shrink-0 rounded-full object-cover sm:size-[176px]"
+    />
 
-  {/*
-    The previous site centred with `h-screen`. `min-h-dvh` is the same
-    composition but accounts for mobile browser chrome, which `vh` units
-    famously do not — with `h-screen` the content sits under the URL bar.
-  */}
-  <header class="flex min-h-dvh items-center justify-center px-6">
-    <div class="flex items-center gap-6">
-      <Image
-        src={avatar}
-        alt={`Portrait of ${site.name}`}
-        width={128}
-        height={128}
-        loading="eager"
-        class="border-border size-24 shrink-0 rounded-full border-4 object-cover sm:size-32"
-      />
-      <div>
-        <h1 class="text-2xl font-medium tracking-tight sm:text-3xl">
-          {site.name}
-        </h1>
-        <p class="text-muted-foreground mt-1 text-sm">{site.identity}</p>
-        <SocialIcons profiles={site.profiles} />
-      </div>
-    </div>
-  </header>
+    <div
+      class="mt-[34px] flex w-full flex-col items-center gap-[14px] sm:mt-0 sm:w-auto sm:items-start sm:gap-[11px]"
+    >
+      <h1
+        class="text-center text-[36px] leading-[1.05] font-medium tracking-[-0.015em] sm:text-left sm:text-[44px] sm:leading-none"
+      >
+        {site.name}
+      </h1>
 
-  {
-    hasDetail && (
-      <main class="mx-auto max-w-2xl px-6 pb-24">
-        {site.bio.length > 0 && (
-          <Section title="About">
-            <div class="space-y-4 leading-relaxed">
-              {site.bio.map((paragraph) => (
-                <p>{paragraph}</p>
-              ))}
-              <p class="text-muted-foreground">{site.location}</p>
-            </div>
-          </Section>
-        )}
+      {/*
+        `nowrap` only from `sm`: the line is short enough to hold on one row
+        beside the portrait, but must be free to wrap in a 390px column.
+      */}
+      <p
+        class="text-muted-foreground text-center text-[14px] leading-[1.55] text-pretty sm:text-left sm:text-[16px] sm:leading-[1.5] sm:tracking-[0.01em] sm:whitespace-nowrap"
+      >
+        {site.identity}
+      </p>
 
-        {site.experience.length > 0 && (
-          <Section title="Experience">
-            <ol class="space-y-6">
-              {site.experience.map((entry) => (
-                <li>
-                  <div class="flex flex-wrap items-baseline justify-between gap-x-4">
-                    <h3 class="font-medium">
-                      {entry.role}
-                      <span class="text-muted-foreground font-normal">
-                        {' · '}
-                        {entry.organisation}
-                      </span>
-                    </h3>
-                    <span class="text-muted-foreground text-sm tabular-nums">
-                      {entry.period}
-                    </span>
-                  </div>
-                  <p class="text-muted-foreground mt-1 leading-relaxed">
-                    {entry.summary}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </Section>
-        )}
+      {/*
+        Tap targets on phones, inline underlined links on desktop. The 48px
+        minimum height is what makes the mobile rows reachable; desktop drops
+        the box entirely and keeps only the hairline rule beneath each label.
+      */}
+      <nav
+        class="mt-[12px] flex w-full flex-col gap-[10px] text-[14px] sm:mt-[8px] sm:w-auto sm:flex-row sm:items-end sm:gap-[22px] sm:text-[15px]"
+        aria-label="Primary"
+      >
+        <a
+          href="/about"
+          data-umami-event="nav-about"
+          class="border-foreground text-foreground hover:text-foreground/70 flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:text-muted-foreground sm:min-h-0 sm:justify-start sm:rounded-none sm:border-0 sm:border-b sm:border-border sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
+        >
+          <span>About</span>
+          <span aria-hidden="true" class="sm:hidden">→</span>
+        </a>
 
-        {site.interests.length > 0 && (
-          <Section title="Interests">
-            <div class="space-y-3 leading-relaxed">
-              {site.interests.map((interest) => (
-                <p>{interest}</p>
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {site.email && (
-          <Section title="Contact">
+        {
+          site.profiles.map((profile) => (
             <a
-              href={`mailto:${site.email}`}
-              class="decoration-muted-foreground/40 hover:decoration-foreground underline underline-offset-4 transition-colors"
+              href={profile.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-umami-event={profile.event}
+              aria-label={profile.label}
+              class="border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
             >
-              {site.email}
+              <span>{profile.text}</span>
+              <span aria-hidden="true">↗</span>
             </a>
-          </Section>
-        )}
-      </main>
-    )
-  }
+          ))
+        }
+      </nav>
+    </div>
+  </main>
 </BaseLayout>

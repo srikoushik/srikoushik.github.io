@@ -1,20 +1,46 @@
-.DS_Store
-npm-debug.log*
+# dependencies
+node_modules/
 
 # build output
 dist/
 .astro/
 
-# dependencies
-node_modules/
-
 # environment
+#
+# Astro reads .env, .env.local and .env.[mode][.local], so the whole family is
+# ignored rather than the two names that happened to exist — a stray
+# .env.local holding a real Umami website ID would otherwise be committed.
+# .env.example is the tracked template, so it is exempt.
 .env
-.env.production
+.env.*
+!.env.example
 
 # test artifacts
 test-results/
 playwright-report/
+blob-report/
+playwright/.cache/
+
+# typescript incremental build info
+*.tsbuildinfo
+
+# logs
+*.log
+
+# editors
+# Shared workspace config stays tracked if it is ever added; personal state does not.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+
+# claude code — local overrides only; committed project config is meant to be shared
+.claude/settings.local.json
+
+# os
+.DS_Store
+Thumbs.db
 
 # NOTE: package-lock.json is intentionally NOT ignored.
 # withastro/action detects the package manager from the committed lockfile.
