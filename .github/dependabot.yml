@@ -1,0 +1,52 @@
+version: 2
+
+# PRs target `dev`, not the default branch. `dev` is what deploy.yml builds
+# from, so a merged bump reaches the live site immediately; landing these on
+# `master` would leave the deployed dependencies stale until the next promote.
+updates:
+  # Actions in deploy.yml are pinned to commit SHAs rather than tags, which
+  # freezes them until something updates them deliberately — that is the point
+  # of a SHA pin, and this is the something. Dependabot rewrites the SHA and
+  # the trailing `# vX.Y.Z` comment together, so the pin stays readable.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "dev"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      # Matches the repo's conventional-commit history, where workflow and
+      # toolchain changes use `ci:` (see "ci: publish via GitHub Pages Actions").
+      prefix: "ci"
+      include: "scope"
+    groups:
+      # Three actions, all maintained in lockstep with the Pages flow — there
+      # is nothing gained by reviewing them one PR at a time.
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "dev"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    groups:
+      # Minor and patch bumps arrive as a single PR: the test suite is the real
+      # gate on these, and eight dependencies producing eight PRs a week is how
+      # a personal site's notifications get muted.
+      #
+      # Majors are deliberately excluded, so each one gets its own PR. An Astro
+      # or Tailwind major carries breaking changes worth reading a changelog
+      # for, and it should not ride in alongside a patch bump.
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
