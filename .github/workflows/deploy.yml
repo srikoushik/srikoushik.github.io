@@ -2,11 +2,15 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [dev]
+    branches: [master]
   workflow_dispatch:
 
-# Publishes from an ephemeral artifact rather than force-pushing a branch,
-# so `master` is no longer a deploy target and can safely hold source and docs.
+# Publishes from an ephemeral artifact rather than force-pushing a branch.
+#
+# That is what retired the two-branch split: `master` used to have its entire
+# contents replaced on every deploy, so source had to live somewhere else, and
+# `dev` existed to hold it. Nothing writes to a branch now, so the default
+# branch is both the source of truth and the deploy trigger.
 permissions:
   contents: read
   pages: write

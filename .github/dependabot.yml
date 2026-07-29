@@ -1,8 +1,9 @@
 version: 2
 
-# PRs target `dev`, not the default branch. `dev` is what deploy.yml builds
-# from, so a merged bump reaches the live site immediately; landing these on
-# `master` would leave the deployed dependencies stale until the next promote.
+# No `target-branch`: PRs go to the default branch, which is also what
+# deploy.yml builds from, so a merged bump reaches the live site directly.
+# Dependabot reads this file from the default branch too, so config and
+# manifests are the same tree — nothing to keep in step.
 updates:
   # Actions in deploy.yml are pinned to commit SHAs rather than tags, which
   # freezes them until something updates them deliberately — that is the point
@@ -10,7 +11,6 @@ updates:
   # the trailing `# vX.Y.Z` comment together, so the pin stays readable.
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "dev"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -28,7 +28,6 @@ updates:
 
   - package-ecosystem: "npm"
     directory: "/"
-    target-branch: "dev"
     schedule:
       interval: "weekly"
       day: "monday"
