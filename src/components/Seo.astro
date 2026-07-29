@@ -15,10 +15,13 @@ const { title, description, noindex = false } = Astro.props;
 // link previews rendered without an image.
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(site.ogImage, Astro.site);
+const personImage = new URL(site.personImage, Astro.site);
 
 // ProfilePage rather than a bare Person: Google's rich-results gallery does
 // not list Person as a supported type. `sameAs` is the part that actually
 // earns its keep, tying this site to the external profiles as one identity.
+// `knowsAbout` comes straight from the tech stack, so the two can never
+// drift apart.
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'ProfilePage',
@@ -26,9 +29,10 @@ const structuredData = {
     '@type': 'Person',
     name: site.name,
     description: site.bio[0].text,
-    image: ogImage.href,
+    image: personImage.href,
     jobTitle: site.jobTitle,
     url: Astro.site?.href,
+    knowsAbout: site.stack.flatMap((row) => row.value.split(', ')),
     sameAs: site.profiles.map((link) => link.href),
   },
 };
@@ -36,23 +40,39 @@ const structuredData = {
 
 <title>{title}</title>
 <meta name="description" content={description} />
-<link rel="canonical" href={canonical.href} />
+{/*
+  noindex pages (the 404) get neither a canonical nor structured data: a
+  canonical says "index this" while the robots tag says the opposite, and
+  JSON-LD on a page that must stay out of the index is dead weight.
+*/}
+{!noindex && <link rel="canonical" href={canonical.href} />}
 {noindex && <meta name="robots" content="noindex, nofollow" />}
 
 <meta name="google-site-verification" content={site.googleSiteVerification} />
 
 <meta property="og:type" content="profile" />
 <meta property="og:site_name" content="srikoushik.github.io" />
+<meta property="og:locale" content="en_US" />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical.href} />
 <meta property="og:image" content={ogImage.href} />
+{/*
+  Dimensions, type and alt let scrapers lay out the preview without fetching
+  the image first — without them some clients render a grey box or drop the
+  image entirely.
+*/}
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content={String(site.ogImageWidth)} />
+<meta property="og:image:height" content={String(site.ogImageHeight)} />
+<meta property="og:image:alt" content={site.ogImageAlt} />
 
-{/* `summary`, not `summary_large_image`: the current image is square. */}
-<meta name="twitter:card" content="summary" />
+{/* The card is 1200x630, so the wide `summary_large_image` treatment. */}
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage.href} />
+<meta name="twitter:image:alt" content={site.ogImageAlt} />
 
 {/*
   `set:html` does not escape, and JSON.stringify leaves `/` alone — so a
@@ -60,8 +80,12 @@ const structuredData = {
   the rest into live markup. The < escape is still valid JSON, and every
   JSON-LD parser reads it back as an ordinary `<`.
 */}
-<script
-  type="application/ld+json"
-  is:inline
-  set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')}
-/>
+{
+  !noindex && (
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')}
+    />
+  )
+}

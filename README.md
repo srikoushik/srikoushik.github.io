@@ -4,7 +4,8 @@ Personal site — a text-first card and an About page at
 [srikoushik.github.io](https://srikoushik.github.io).
 
 Built with [Astro](https://astro.build) on Tailwind 4. No UI framework.
-Requires **Node ≥ 22.12**.
+Requires **Node ≥ 22.18** — 22.18 is where Node started importing TypeScript
+natively, which `scripts/generate-og-card.mjs` relies on.
 
 ## Getting started
 
@@ -20,6 +21,7 @@ npm run dev      # http://localhost:4321
 | `npm run preview` | Serve the production build locally |
 | `npm test` | Playwright suite (builds first, then runs) |
 | `npm run typecheck` | `astro check` |
+| `npm run generate:og` | Regenerate the Open Graph share card |
 
 ## Where things live
 
@@ -98,9 +100,10 @@ for body copy. It costs 132 KB against 58 KB for the latin subset.
 
 ## The profile photo
 
-`src/assets/me.jpg` (512×512, the avatar) and `public/me.jpg` (1200×1200, the
-share card) are square crops with the frame baked into the file rather than
-left to `object-cover` — on a 2:3 portrait, centring would cut the head off.
+`src/assets/me.jpg` (512×512, the avatar) and `public/me.jpg` (1200×1200,
+the `Person` image in the structured data) are square crops with the frame
+baked into the file rather than left to `object-cover` — on a 2:3 portrait,
+centring would cut the head off.
 
 The uncropped original is **not** in the repo. To regenerate from a new
 source photo, the crop that produced the current files was:
@@ -111,8 +114,20 @@ sharp('me-source.jpg').extract(CROP).resize(512, 512).toFile('src/assets/me.jpg'
 sharp('me-source.jpg').extract(CROP).resize(1200, 1200).toFile('public/me.jpg');
 ```
 
-`public/me.jpg` is served from `public/` rather than `astro:assets` because
-`og:image` needs a URL that does not change between builds.
+Both live where they do for a reason: `src/assets/` gets the avatar
+processed and hashed by `astro:assets`, while `public/me.jpg` needs a stable
+URL that does not change between builds.
+
+## The share card
+
+`public/og-card.jpg` is the 1200×630 Open Graph image, generated from the
+portrait by `npm run generate:og` (`scripts/generate-og-card.mjs`, sharp +
+an SVG laid out in the site's own palette). The script imports
+`src/content/site.ts` directly, so name, tagline, dimensions and image paths
+always match what the metadata describes — regenerating after a copy change
+is the only step. The one exception is the visible hostname, a constant in
+the script that must match `site` in `astro.config.mjs`.
+`tests/seo.spec.ts` pins the card type and dimensions.
 
 ## Analytics
 

@@ -21,7 +21,10 @@ import { site } from '@/content/site';
  */
 ---
 
-<BaseLayout title={`${site.name} — ${site.identity}`} description={site.identity}>
+<BaseLayout
+  title={`${site.name} — ${site.identity}`}
+  description={site.homeDescription}
+>
   <main
     class="flex min-h-dvh flex-col items-center justify-center px-[22px] sm:flex-row sm:gap-[44px] sm:px-12"
   >

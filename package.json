@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "test": "playwright test",
-    "typecheck": "astro check"
+    "typecheck": "astro check",
+    "generate:og": "node scripts/generate-og-card.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
@@ -21,6 +25,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@playwright/test": "^1.62.0",
+    "sharp": "^0.35.3",
     "typescript": "^6.0.3"
   }
 }

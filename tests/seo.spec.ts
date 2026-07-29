@@ -18,13 +18,29 @@ test.describe('metadata', () => {
       'meta[property="og:description"]',
       'meta[property="og:url"]',
       'meta[property="og:image"]',
+      'meta[property="og:image:type"]',
+      'meta[property="og:image:width"]',
+      'meta[property="og:image:height"]',
+      'meta[property="og:image:alt"]',
+      'meta[property="og:locale"]',
       'meta[name="twitter:card"]',
       'meta[name="twitter:title"]',
       'meta[name="twitter:image"]',
+      'meta[name="twitter:image:alt"]',
     ]) {
       expect(await contentOf(page, selector), `${selector} is empty`).toBeTruthy();
     }
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+  });
+
+  // The dimensions and the card type are a pair: a 1200x630 image behind a
+  // square `summary` card crops badly, and `summary_large_image` behind a
+  // square image letterboxes. They must move together.
+  test('ships the wide share card with honest dimensions', async ({ page }) => {
+    await page.goto('/');
+    expect(await contentOf(page, 'meta[name="twitter:card"]')).toBe('summary_large_image');
+    expect(await contentOf(page, 'meta[property="og:image:width"]')).toBe('1200');
+    expect(await contentOf(page, 'meta[property="og:image:height"]')).toBe('630');
   });
 
   // Direct regression test for the previous site, which shipped a relative
@@ -44,6 +60,16 @@ test.describe('metadata', () => {
   test('does not accidentally block indexing', async ({ page }) => {
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   });
+
+  // rel="me" completes the bidirectional identity check that Mastodon and
+  // IndieWeb verification look for; it only belongs on profile roots.
+  test('marks profile links as the same identity', async ({ page }) => {
+    for (const href of ['linkedin.com/in/srikoushik', 'github.com/srikoushik']) {
+      const rel = await page.locator(`a[href*="${href}"]`).first().getAttribute('rel');
+      expect(rel).toMatch(/\bme\b/);
+      expect(rel).toContain('noopener');
+    }
+  });
 });
 
 test.describe('structured data', () => {
@@ -57,6 +83,8 @@ test.describe('structured data', () => {
     expect(data['@type']).toBe('ProfilePage');
     expect(data.mainEntity['@type']).toBe('Person');
     expect(data.mainEntity.name).toBeTruthy();
+    // Sourced from the tech stack, so this only breaks if site.ts does.
+    expect(data.mainEntity.knowsAbout).toContain('TypeScript');
   });
 
   test('sameAs matches the links actually visible on the page', async ({ page }) => {
@@ -129,6 +157,10 @@ test.describe('crawlability and semantics', () => {
       'content',
       /noindex/,
     );
+    // A canonical says "index this URL" — the opposite of noindex. Neither
+    // it nor the structured-data block belongs on a page that must stay out.
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
   });
 
   test('exposes a sitemap and robots.txt', async ({ request }) => {
