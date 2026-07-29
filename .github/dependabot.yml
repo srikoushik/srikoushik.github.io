@@ -35,6 +35,17 @@ updates:
       prefix: "chore"
       prefix-development: "chore"
       include: "scope"
+    ignore:
+      # TypeScript 7 is the native compiler, and it does not expose the
+      # programmatic API @astrojs/language-server needs -- `astro check` exits 1
+      # on it, so `npm run typecheck` is dead the moment it lands. The build is
+      # unaffected (Astro compiles through esbuild), which is exactly why this
+      # would slip through a green CI run.
+      #
+      # Without this, Dependabot reopens an unmergeable major every Monday.
+      # Drop the rule once withastro/roadmap#1321 ships TS 7 support.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       # Minor and patch bumps arrive as a single PR: the test suite is the real
       # gate on these, and eight dependencies producing eight PRs a week is how
