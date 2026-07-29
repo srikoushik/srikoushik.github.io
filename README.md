@@ -36,6 +36,7 @@ src/
     OutboundLink.astro   a link that leaves the site
   styles/global.css      Tailwind + theme tokens
 tests/                   Playwright specs
+  analytics.spec.ts      builds with a website ID; the rest build without
 ```
 
 **To change any wording, edit `src/content/site.ts`.** Nothing else needs
@@ -131,6 +132,23 @@ Outbound clicks are tracked declaratively via `data-umami-event` attributes,
 so links keep working with JavaScript disabled. Event names must stay under
 50 characters and must be unique per link *and across routes*; tests enforce
 both. **Renaming an event fragments its historical data.**
+
+### Core Web Vitals
+
+`data-performance="true"` on the tracker script turns on collection of TTFB,
+FCP, LCP, CLS and INP; they show up on Umami's Performance page. The collector
+is already inside the tracker script the page loads anyway, so this adds **no
+request, no bytes and no dependency** — which is why the site can measure
+vitals while still shipping none of its own JavaScript.
+
+The value has to be the literal string `"true"`. The tracker compares it
+exactly (`data-performance === 'true'`), so `"1"` or a bare attribute leaves
+collection silently off, with no symptom until you notice an empty Performance
+page. `tests/analytics.spec.ts` builds *with* a website ID and asserts it —
+every other spec builds without one, so nothing else can see this attribute.
+
+Vitals only ever arrive from real visits to the deployed site: the tracker is
+gated on `PROD` *and* on the website ID, so local runs report nothing.
 
 ## Running the tests
 
