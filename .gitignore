@@ -46,6 +46,11 @@ playwright/.cache/
 .claude/settings.local.json
 CLAUDE.md
 
+# working docs — plans and handoffs, same reasoning as CLAUDE.md above: notes
+# for building the site rather than part of what it ships. Also previously
+# tracked, so it took `git rm -r --cached` too.
+docs/
+
 # os
 .DS_Store
 Thumbs.db
