@@ -88,9 +88,11 @@ test.describe('responsive treatment', () => {
     expect(borders).toEqual({ bottom: '1px', top: '0px', radius: '0px' });
   });
 
-  // Regressed once already: cva concatenates rather than merges, so the base
-  // variant's `rounded-lg` beat `rounded-full` and the control rendered as a
-  // rounded square.
+  // Regressed once already, back when the control was built on a class-variant
+  // helper: the helper concatenated rather than merged, so a base variant's
+  // corner radius won and the control rendered as a rounded square. The helper
+  // is gone, but the shape is still worth pinning — it is the one control on
+  // the page and a square one looks broken.
   test('keeps the theme control circular', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');

@@ -1,12 +1,8 @@
 ---
 // The site's only interactive element, and deliberately not a React island —
 // hydrating a framework for one button would ship ~45 KB gzipped to a page
-// that is otherwise pure text.
-//
-// Styled directly rather than through shadcn's `buttonVariants`. That helper
-// was the last thing keeping React, radix-ui and cva in the dependency tree,
-// and Tailwind emitted its entire variant matrix — every size, every state,
-// six variants — into the stylesheet for a button that used one hover rule.
+// that is otherwise pure text. Styled with plain utilities for the same
+// reason; see the README on why shadcn is not a dependency.
 //
 // 38px circle, growing to 44px on touch where it has to clear the tap-target
 // minimum. `cursor-pointer` is explicit because the browser default for
@@ -18,7 +14,7 @@ const classes = [
   'hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
   'focus-visible:ring-3 focus-visible:ring-ring/50',
   '[&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0',
-].join(' ');
+];
 ---
 
 <button
@@ -27,7 +23,7 @@ const classes = [
   data-preference="system"
   aria-label="Toggle theme"
   title="Theme: system"
-  class={classes}
+  class:list={classes}
 >
   <svg
     data-icon-for="light"

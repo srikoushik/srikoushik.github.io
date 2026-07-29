@@ -123,6 +123,12 @@ test.describe('crawlability and semantics', () => {
     const response = await page.goto('/does-not-exist', { waitUntil: 'commit' });
     // The dev preview server returns 404; GitHub Pages serves 404.html too.
     expect(response?.status()).toBe(404);
+    // The status alone does not keep it out of the index — the page has to
+    // say so itself, which is the whole reason 404.astro passes `noindex`.
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      /noindex/,
+    );
   });
 
   test('exposes a sitemap and robots.txt', async ({ request }) => {

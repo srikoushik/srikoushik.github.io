@@ -1,0 +1,37 @@
+---
+import type { Link } from '@/content/site';
+
+/**
+ * A link that leaves the site.
+ *
+ * Both routes render this same row — a bordered tap target on phones, an
+ * underlined inline link from `sm` up. It exists as a component mainly so
+ * `rel="noopener noreferrer"` is stated once: that hardening is a property of
+ * every outbound link, and `tests/build-output.spec.ts` fails the build
+ * without it, so it should not be something each new call site remembers.
+ *
+ * The two pages keep slightly different vertical rhythms (6px on the card,
+ * 8px on About), which is the only reason `class` is a prop.
+ */
+interface Props {
+  link: Link;
+  /** Page-specific vertical padding from `sm` up. */
+  class?: string;
+}
+
+const { link, class: className } = Astro.props;
+---
+
+<a
+  href={link.href}
+  target="_blank"
+  rel="noopener noreferrer"
+  data-umami-event={link.event}
+  class:list={[
+    'border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:leading-[1.4]',
+    className,
+  ]}
+>
+  <span>{link.text}</span>
+  <span aria-hidden="true">{link.glyph}</span>
+</a>

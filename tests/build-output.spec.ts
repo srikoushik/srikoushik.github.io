@@ -6,7 +6,10 @@ import { test, expect } from '@playwright/test';
  * to a page that is otherwise pure text.
  */
 
-const CSS_BUDGET_BYTES = 30 * 1024;
+// The stylesheet is around 15 KB uncompressed. 20 KB leaves room for a few
+// more utilities without leaving room for a regression: at the old 30 KB the
+// budget had nearly 2x headroom and would not have caught anything.
+const CSS_BUDGET_BYTES = 20 * 1024;
 
 /** Every route that ships to users. Link and analytics rules apply to all. */
 const ROUTES = ['/', '/about'];

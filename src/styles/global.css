@@ -9,16 +9,18 @@
  * `ring`) because they are good names and the design's ink levels map onto
  * them cleanly. shadcn itself is no longer a dependency — nothing here
  * rendered a shadcn component.
+ *
+ * `source(none)` turns off automatic detection, which otherwise sweeps in
+ * every file git does not ignore. Prose is full of words that are also
+ * utility names, so English sentences were compiling: a test comment
+ * mentioning `rounded-lg` and config comments reading "absolute URLs" and
+ * "static markup" each emitted a real rule into the shipped stylesheet.
+ * Templates are the only thing here that writes a class attribute, so they
+ * are the only thing worth scanning — and unlike a list of exclusions, that
+ * stays true as files are added.
  */
-@import "tailwindcss";
-
-/*
- * Tailwind 4 detects sources automatically, which sweeps in every file git
- * does not ignore — including this repo's markdown. Prose that happens to
- * contain a word like `border` or `object-cover` was emitting real utilities
- * into the shipped stylesheet, so documentation edits changed the CSS.
- */
-@source not "../../**/*.md";
+@import "tailwindcss" source(none);
+@source "../**/*.astro";
 
 /*
  * Newsreader, optical-size + weight axes.
@@ -52,23 +54,17 @@
   --font-serif: 'Newsreader Variable', Newsreader, Georgia, 'Times New Roman', serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
+  /*
+   * Only the tokens the site actually uses. shadcn's init writes a full set —
+   * card, popover, primary, secondary, accent, destructive, input — and every
+   * one of them was declared in both `:root` and `.dark` while never being
+   * referenced, so they shipped to every visitor as dead bytes.
+   */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
   --color-border: var(--border);
-  --color-input: var(--input);
   --color-ring: var(--ring);
 
   /*
@@ -77,11 +73,6 @@
    * the values they label.
    */
   --color-faint: var(--faint);
-
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
 }
 
 /*
@@ -102,21 +93,7 @@
   --muted-foreground: oklch(0.515 0.012 75); /* inkSoft */
   --faint: oklch(0.665 0.01 78); /* inkFaint */
   --border: oklch(0.315 0.012 70 / 0.16); /* hairline */
-
-  --card: oklch(0.955 0.007 85);
-  --card-foreground: oklch(0.305 0.015 64);
-  --popover: oklch(0.955 0.007 85);
-  --popover-foreground: oklch(0.305 0.015 64);
-  --primary: oklch(0.305 0.015 64);
-  --primary-foreground: oklch(0.975 0.006 85);
-  --secondary: oklch(0.955 0.007 85);
-  --secondary-foreground: oklch(0.305 0.015 64);
-  --accent: oklch(0.955 0.007 85);
-  --accent-foreground: oklch(0.305 0.015 64);
-  --destructive: oklch(0.577 0.245 27.325);
-  --input: oklch(0.315 0.012 70 / 0.16);
   --ring: oklch(0.515 0.012 75);
-  --radius: 0.75rem;
 
   /*
    * The portrait is the one element that lifts off the flat surface, so this
@@ -138,19 +115,6 @@
   --muted-foreground: oklch(0.755 0.01 78); /* inkSoft */
   --faint: oklch(0.605 0.009 78); /* inkFaint */
   --border: oklch(0.945 0.006 80 / 0.2); /* hairline */
-
-  --card: oklch(0.305 0.01 65);
-  --card-foreground: oklch(0.905 0.013 85);
-  --popover: oklch(0.305 0.01 65);
-  --popover-foreground: oklch(0.905 0.013 85);
-  --primary: oklch(0.905 0.013 85);
-  --primary-foreground: oklch(0.255 0.01 65);
-  --secondary: oklch(0.305 0.01 65);
-  --secondary-foreground: oklch(0.905 0.013 85);
-  --accent: oklch(0.305 0.01 65);
-  --accent-foreground: oklch(0.905 0.013 85);
-  --destructive: oklch(0.704 0.191 22.216);
-  --input: oklch(0.945 0.006 80 / 0.2);
   --ring: oklch(0.755 0.01 78);
 
   /*

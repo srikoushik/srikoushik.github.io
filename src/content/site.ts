@@ -5,12 +5,19 @@
  * module, and TypeScript fails the build if an entry is malformed.
  */
 
-export interface Profile {
-  /** Used as the link's accessible name, since the icon carries no text. */
-  label: string;
-  href: string;
-  /** Shown on the home card. Kept short — it sits in a tight row. */
+export interface Link {
+  /**
+   * The visible label, and the link's accessible name. Kept short — these sit
+   * in a tight row.
+   */
   text: string;
+  href: string;
+  /**
+   * `↗` marks a link that leaves the site, `→` one that continues within the
+   * same reading. Carried from the design, where the two are used distinctly.
+   * Rendered `aria-hidden` — it is decoration, not part of the name.
+   */
+  glyph: '↗' | '→';
   /** Umami event name. Keep stable — renaming fragments historical data. */
   event: string;
 }
@@ -32,17 +39,6 @@ export interface StackRow {
   value: string;
 }
 
-export interface AboutLink {
-  text: string;
-  href: string;
-  /**
-   * `↗` marks a link that leaves the site, `→` one that continues within the
-   * same reading. Carried from the design, where the two are used distinctly.
-   */
-  glyph: '↗' | '→';
-  event: string;
-}
-
 export interface SiteContent {
   name: string;
   /** The single line under the name on the home card. Keep it to one line. */
@@ -50,9 +46,9 @@ export interface SiteContent {
   bio: BioParagraph[];
   stack: StackRow[];
   /** Rendered as text links on the home card, and used as `sameAs`. */
-  profiles: Profile[];
+  profiles: Link[];
   /** Rendered in the About page footer. */
-  aboutLinks: AboutLink[];
+  aboutLinks: Link[];
   /** Used as `jobTitle` in the Person structured data. */
   jobTitle: string;
   /**
@@ -90,15 +86,15 @@ export const site: SiteContent = {
   // that disagrees with the page it describes is worse than none at all.
   profiles: [
     {
-      label: 'LinkedIn — projects and experience',
-      href: 'https://www.linkedin.com/in/srikoushik/',
       text: 'LinkedIn',
+      href: 'https://www.linkedin.com/in/srikoushik/',
+      glyph: '↗',
       event: 'outbound-linkedin',
     },
     {
-      label: 'GitHub — code',
-      href: 'https://github.com/srikoushik',
       text: 'GitHub',
+      href: 'https://github.com/srikoushik',
+      glyph: '↗',
       event: 'outbound-github',
     },
   ],
