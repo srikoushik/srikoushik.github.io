@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import OutboundLink from '@/components/OutboundLink.astro';
 import { site } from '@/content/site';
 
 /**
@@ -108,16 +109,7 @@ import { site } from '@/content/site';
 
       {
         site.aboutLinks.map((link) => (
-          <a
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-umami-event={link.event}
-            class="border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:py-[8px] sm:leading-[1.4]"
-          >
-            <span>{link.text}</span>
-            <span aria-hidden="true">{link.glyph}</span>
-          </a>
+          <OutboundLink link={link} class="sm:py-[8px]" />
         ))
       }
     </nav>

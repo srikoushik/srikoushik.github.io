@@ -21,8 +21,14 @@ const { title, description, noindex } = Astro.props;
 // configured, so local development never pollutes the data — the intent
 // behind the old analytics module's isLocalhost guard.
 //
-// Set PUBLIC_UMAMI_WEBSITE_ID in .env locally and as a repository variable
-// for the deploy workflow. Without it the site simply ships no tracker.
+// PUBLIC_UMAMI_WEBSITE_ID is a repository variable, read by deploy.yml.
+// Without it the site simply ships no tracker.
+//
+// Do not keep it in a local `.env`. The PROD guard means it cannot switch the
+// tracker on under `astro dev` anyway, and `npm test` builds for production
+// and asserts the tracker is absent — so a populated `.env` fails a correct
+// build. To exercise it locally, pass it for one command:
+// `PUBLIC_UMAMI_WEBSITE_ID=... npm run build`.
 const umamiWebsiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
 const trackingEnabled = import.meta.env.PROD && Boolean(umamiWebsiteId);
 ---
@@ -78,6 +84,16 @@ const trackingEnabled = import.meta.env.PROD && Boolean(umamiWebsiteId);
       })();
     </script>
 
+    {/*
+      `data-performance` turns on Core Web Vitals collection (TTFB, FCP, LCP,
+      CLS, INP), which surfaces on Umami's Performance page. It costs nothing
+      extra: the collector already ships inside the tracker script this page
+      loads either way, and enabling it adds no request and no bytes.
+
+      The value must be the literal string "true" — the tracker compares
+      against it exactly, so "1" or a bare attribute silently collects
+      nothing. `tests/analytics.spec.ts` builds with an ID and asserts it.
+    */}
     {
       trackingEnabled && (
         <script
@@ -85,6 +101,7 @@ const trackingEnabled = import.meta.env.PROD && Boolean(umamiWebsiteId);
           defer
           src="https://cloud.umami.is/script.js"
           data-website-id={umamiWebsiteId}
+          data-performance="true"
         />
       )
     }

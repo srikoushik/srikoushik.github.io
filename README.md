@@ -33,8 +33,10 @@ src/
   components/
     Seo.astro            metadata, Open Graph, JSON-LD
     ThemeToggle.astro    light / dark / system
+    OutboundLink.astro   a link that leaves the site
   styles/global.css      Tailwind + theme tokens
 tests/                   Playwright specs
+  analytics.spec.ts      builds with a website ID; the rest build without
 ```
 
 **To change any wording, edit `src/content/site.ts`.** Nothing else needs
@@ -65,6 +67,15 @@ load — `tests/navigation.spec.ts` covers it.
 theme tokens live in `src/styles/global.css`. Dark mode keys off a `dark`
 class on `<html>`.
 
+**Tailwind scans `src/**/*.astro` and nothing else.** `global.css` imports
+with `source(none)` and declares that one path, rather than letting automatic
+detection sweep in every file git does not ignore. English is full of words
+that are also utility names, so prose was compiling: a comment in a test that
+mentioned `rounded-lg`, and config comments reading "absolute URLs" and
+"static markup", each emitted a real rule into the shipped stylesheet.
+Templates are the only thing here that writes a class attribute — if that
+ever stops being true, add the path rather than removing the restriction.
+
 **The palette is warm paper in oklch**, from the "flat surfaces" design. Four
 ink levels (`foreground`, `muted-foreground`, `faint`, `border`) over two
 surfaces (`background`, `muted`). Every tone carries a little chroma on a
@@ -72,8 +83,12 @@ yellow-orange hue, which is what keeps light mode reading as paper rather
 than white and dark mode as ink rather than black.
 
 The token names are shadcn's, but shadcn is not a dependency — nothing here
-ever rendered a shadcn component. If you want one, `npx shadcn@latest init`
-restores `components.json` and the React toolchain.
+ever rendered a shadcn component. Only the tokens the site actually uses are
+declared; shadcn's `card`, `popover`, `primary`, `secondary`, `accent`,
+`destructive` and `input` were shipping to every visitor in both `:root` and
+`.dark` without a single reference. If you want a shadcn component,
+`npx shadcn@latest init` restores `components.json`, the React toolchain and
+the full token set.
 
 **Typography is Newsreader**, and the whole site is set in it — from 10px
 eyebrows to the 44px name. `global.css` imports the two-axis (`opsz` + `wght`)
@@ -102,23 +117,68 @@ sharp('me-source.jpg').extract(CROP).resize(1200, 1200).toFile('public/me.jpg');
 ## Analytics
 
 Umami Cloud, emitted only in production builds and only when
-`PUBLIC_UMAMI_WEBSITE_ID` is set — so local development never reports
-traffic. Copy `.env.example` to `.env` to run it locally.
+`PUBLIC_UMAMI_WEBSITE_ID` is set — so local development never reports traffic.
+
+**Do not put that variable in a `.env`.** The tracker is gated on `PROD`, so
+`astro dev` ignores it either way, and `npm test` builds for production and
+asserts the tracker is *absent* — a populated `.env` fails a correct build.
+To exercise it locally, pass it for one command:
+
+```sh
+PUBLIC_UMAMI_WEBSITE_ID=... npm run build
+```
 
 Outbound clicks are tracked declaratively via `data-umami-event` attributes,
 so links keep working with JavaScript disabled. Event names must stay under
 50 characters and must be unique per link *and across routes*; tests enforce
 both. **Renaming an event fragments its historical data.**
 
+### Core Web Vitals
+
+`data-performance="true"` on the tracker script turns on collection of TTFB,
+FCP, LCP, CLS and INP; they show up on Umami's Performance page. The collector
+is already inside the tracker script the page loads anyway, so this adds **no
+request, no bytes and no dependency** — which is why the site can measure
+vitals while still shipping none of its own JavaScript.
+
+The value has to be the literal string `"true"`. The tracker compares it
+exactly (`data-performance === 'true'`), so `"1"` or a bare attribute leaves
+collection silently off, with no symptom until you notice an empty Performance
+page. `tests/analytics.spec.ts` builds *with* a website ID and asserts it —
+every other spec builds without one, so nothing else can see this attribute.
+
+Vitals only ever arrive from real visits to the deployed site: the tracker is
+gated on `PROD` *and* on the website ID, so local runs report nothing.
+
+## Running the tests
+
+`npm test` builds for production and runs Playwright against the built output,
+because what it asserts — no-flash first paint, emitted metadata, JS payload —
+are properties of the build, not the dev server.
+
+**Stop any dev server on port 4321 first.** `playwright.config.ts` sets
+`reuseExistingServer: !process.env.CI`, so a running dev server is silently
+used instead of a production build. The sitemap 404s and the dev toolbar adds
+a second `h1`, giving three failures unrelated to whatever you changed.
+
 ## Deployment
 
-Pushing to `dev` triggers `.github/workflows/deploy.yml`, which builds and
-publishes via GitHub Pages Actions.
+Pushing to `master` triggers `.github/workflows/deploy.yml`, which builds and
+publishes via GitHub Pages Actions. `master` is the only branch: it is the
+source of truth and the deploy trigger.
+
+The two-branch split this repo used to have existed because the old deploy
+force-pushed built output to `master`, wiping it on every publish, so source
+had to live on `dev`. Publishing now goes through an ephemeral Pages artifact
+and nothing writes to a branch, which is what made the split pointless.
+
+Actions in the workflow are pinned to **commit SHAs**, not tags, with the
+version in a trailing comment. Tags are mutable and that job holds
+`pages: write` plus `id-token: write`, so a retagged third-party action could
+publish to the live site. Dependabot updates the SHA and its comment together.
 
 Two settings live outside this repo:
 
 - Repository **Settings → Pages → Source** must be **GitHub Actions**.
-- `PUBLIC_UMAMI_WEBSITE_ID` is read from a repository **variable**.
-
-`master` is no longer a deploy target. It previously had its entire contents
-replaced on every deploy, which destroyed anything else committed there.
+- `PUBLIC_UMAMI_WEBSITE_ID` is read from a repository **variable**. Without
+  it the build silently omits the tracker.

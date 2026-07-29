@@ -10,10 +10,14 @@ dist/
 # Astro reads .env, .env.local and .env.[mode][.local], so the whole family is
 # ignored rather than the two names that happened to exist — a stray
 # .env.local holding a real Umami website ID would otherwise be committed.
-# .env.example is the tracked template, so it is exempt.
+#
+# There is deliberately no tracked .env.example. The site's one variable,
+# PUBLIC_UMAMI_WEBSITE_ID, lives as a repository variable, and a local .env
+# cannot do anything useful with it: the tracker is gated on PROD, so `astro
+# dev` ignores it, while `npm test` builds for production and asserts the
+# tracker is absent — which a populated .env would fail. See the README.
 .env
 .env.*
-!.env.example
 
 # test artifacts
 test-results/
@@ -49,7 +53,7 @@ CLAUDE.md
 # working docs — plans and handoffs, same reasoning as CLAUDE.md above: notes
 # for building the site rather than part of what it ships. Also previously
 # tracked, so it took `git rm -r --cached` too.
-docs/
+docs/*
 
 # os
 .DS_Store

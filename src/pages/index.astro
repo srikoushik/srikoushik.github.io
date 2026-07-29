@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import OutboundLink from '@/components/OutboundLink.astro';
 import { site } from '@/content/site';
 
 /**
@@ -73,17 +74,7 @@ import { site } from '@/content/site';
 
         {
           site.profiles.map((profile) => (
-            <a
-              href={profile.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-umami-event={profile.event}
-              aria-label={profile.label}
-              class="border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
-            >
-              <span>{profile.text}</span>
-              <span aria-hidden="true">↗</span>
-            </a>
+            <OutboundLink link={profile} class="sm:py-[6px]" />
           ))
         }
       </nav>

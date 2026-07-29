@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
-
 import tailwindcss from '@tailwindcss/vite';
 
 // `site` is what lets Astro emit absolute URLs, which the canonical tag,
