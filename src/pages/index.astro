@@ -1,0 +1,92 @@
+---
+import { Image } from 'astro:assets';
+import avatar from '@/assets/me.jpg';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/content/site';
+
+/**
+ * The home card.
+ *
+ * Two compositions from one tree: a centred column on phones, and a
+ * portrait-beside-type row from `sm` up. The design draws these as separate
+ * frames (390x844 and 934x650), but the difference is entirely axis, gap and
+ * link treatment — enough to express in responsive utilities without
+ * duplicating the markup, and without shipping both and hiding one.
+ *
+ * The design's frames centre their content within a fixed box; here the box is
+ * the viewport, so `min-h-dvh` centring reproduces it at any window size.
+ * `dvh` rather than `vh` because mobile browser chrome makes `vh` overshoot,
+ * which would push the card under the URL bar.
+ */
+---
+
+<BaseLayout title={`${site.name} — ${site.identity}`} description={site.identity}>
+  <main
+    class="flex min-h-dvh flex-col items-center justify-center px-[22px] sm:flex-row sm:gap-[44px] sm:px-12"
+  >
+    <Image
+      src={avatar}
+      alt={`Portrait of ${site.name}`}
+      width={176}
+      height={176}
+      densities={[1, 2]}
+      loading="eager"
+      class="shadow-float-sm sm:shadow-float size-[172px] shrink-0 rounded-full object-cover sm:size-[176px]"
+    />
+
+    <div
+      class="mt-[34px] flex w-full flex-col items-center gap-[14px] sm:mt-0 sm:w-auto sm:items-start sm:gap-[11px]"
+    >
+      <h1
+        class="text-center text-[36px] leading-[1.05] font-medium tracking-[-0.015em] sm:text-left sm:text-[44px] sm:leading-none"
+      >
+        {site.name}
+      </h1>
+
+      {/*
+        `nowrap` only from `sm`: the line is short enough to hold on one row
+        beside the portrait, but must be free to wrap in a 390px column.
+      */}
+      <p
+        class="text-muted-foreground text-center text-[14px] leading-[1.55] text-pretty sm:text-left sm:text-[16px] sm:leading-[1.5] sm:tracking-[0.01em] sm:whitespace-nowrap"
+      >
+        {site.identity}
+      </p>
+
+      {/*
+        Tap targets on phones, inline underlined links on desktop. The 48px
+        minimum height is what makes the mobile rows reachable; desktop drops
+        the box entirely and keeps only the hairline rule beneath each label.
+      */}
+      <nav
+        class="mt-[12px] flex w-full flex-col gap-[10px] text-[14px] sm:mt-[8px] sm:w-auto sm:flex-row sm:items-end sm:gap-[22px] sm:text-[15px]"
+        aria-label="Primary"
+      >
+        <a
+          href="/about"
+          data-umami-event="nav-about"
+          class="border-foreground text-foreground hover:text-foreground/70 flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:text-muted-foreground sm:min-h-0 sm:justify-start sm:rounded-none sm:border-0 sm:border-b sm:border-border sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
+        >
+          <span>About</span>
+          <span aria-hidden="true" class="sm:hidden">→</span>
+        </a>
+
+        {
+          site.profiles.map((profile) => (
+            <a
+              href={profile.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-umami-event={profile.event}
+              aria-label={profile.label}
+              class="border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:py-[6px] sm:leading-[1.4]"
+            >
+              <span>{profile.text}</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </main>
+</BaseLayout>

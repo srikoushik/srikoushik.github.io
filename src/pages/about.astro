@@ -1,0 +1,125 @@
+---
+import { Image } from 'astro:assets';
+import avatar from '@/assets/me.jpg';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/content/site';
+
+/**
+ * The About view.
+ *
+ * A real route rather than the prototype's in-place view swap: this is the
+ * page carrying the actual prose, so it needs to be linkable, crawlable and
+ * countable as its own pageview. The prototype toggled state because a design
+ * canvas has no router — the visual result is identical.
+ */
+---
+
+<BaseLayout
+  title={`About — ${site.name}`}
+  description={site.bio[0].text}
+>
+  <main
+    class="mx-auto flex min-h-dvh w-full max-w-[660px] flex-col gap-[34px] px-[26px] pt-[56px] pb-[44px] sm:gap-[44px] sm:px-0 sm:pt-[76px] sm:pb-[60px]"
+  >
+    <header class="flex items-center gap-[16px] sm:gap-[22px]">
+      <Image
+        src={avatar}
+        alt={`Portrait of ${site.name}`}
+        width={82}
+        height={82}
+        densities={[1, 2]}
+        loading="eager"
+        class="shadow-float-sm size-[62px] shrink-0 rounded-full object-cover sm:size-[82px]"
+      />
+      <div class="flex flex-col gap-[6px] sm:gap-[7px]">
+        <p
+          class="text-faint text-[10px] tracking-[0.22em] uppercase sm:text-[11px]"
+        >
+          About
+        </p>
+        <h1
+          class="text-[30px] leading-none font-medium tracking-[-0.015em] sm:text-[42px]"
+        >
+          {site.name}
+        </h1>
+      </div>
+    </header>
+
+    <div
+      class="flex flex-col gap-[20px] text-[17px] leading-[1.68] text-pretty sm:gap-[26px] sm:text-[20px] sm:leading-[1.72]"
+    >
+      {
+        site.bio.map((paragraph) => (
+          <p>
+            {paragraph.lead && (
+              <strong class="font-semibold">{paragraph.lead}</strong>
+            )}
+            {paragraph.lead ? ` ${paragraph.text}` : paragraph.text}
+          </p>
+        ))
+      }
+    </div>
+
+    <section class="flex flex-col gap-[14px] sm:gap-[16px]">
+      <h2
+        class="text-faint text-[10px] tracking-[0.22em] uppercase sm:text-[11px]"
+      >
+        Tech stack
+      </h2>
+
+      {/*
+        A description list, because that is what this is: each label names the
+        values beside it. `sm:contents` dissolves the per-pair wrapper at the
+        breakpoint so the dt/dd become direct grid items and fall into two
+        columns — the wrapper exists only to hold a pair together in the
+        stacked mobile layout, where the row gaps differ within a pair (3px)
+        and between pairs (12px).
+      */}
+      <dl
+        class="flex flex-col gap-[12px] text-[13px] leading-[1.5] sm:grid sm:grid-cols-[150px_1fr] sm:gap-x-[24px] sm:gap-y-[13px] sm:text-[14px]"
+      >
+        {
+          site.stack.map((row) => (
+            <div class="flex flex-col gap-[3px] sm:contents">
+              <dt class="text-faint">{row.label}</dt>
+              <dd class="text-muted-foreground">{row.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    {/*
+      `mt-auto` pins the footer to the bottom of a short mobile viewport, as
+      the design does. From `sm` it sits directly under the content instead,
+      where the column is centred and the page is read top-to-bottom.
+    */}
+    <nav
+      class="border-border mt-auto flex flex-col gap-[10px] border-t pt-[22px] text-[14px] sm:mt-0 sm:flex-row sm:items-end sm:gap-[26px] sm:pt-[14px] sm:text-[15px]"
+      aria-label="About"
+    >
+      <a
+        href="/"
+        data-umami-event="about-nav-home"
+        class="text-muted-foreground hover:text-foreground order-last flex min-h-[48px] items-center transition-colors sm:order-first sm:min-h-0 sm:px-[2px] sm:py-[8px] sm:leading-[1.4]"
+      >
+        ← Back
+      </a>
+
+      {
+        site.aboutLinks.map((link) => (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-umami-event={link.event}
+            class="border-border text-muted-foreground hover:text-foreground flex min-h-[48px] items-center justify-between rounded-[12px] border px-[18px] transition-colors sm:min-h-0 sm:justify-start sm:gap-[0.3em] sm:rounded-none sm:border-0 sm:border-b sm:px-[2px] sm:py-[8px] sm:leading-[1.4]"
+          >
+            <span>{link.text}</span>
+            <span aria-hidden="true">{link.glyph}</span>
+          </a>
+        ))
+      }
+    </nav>
+  </main>
+</BaseLayout>

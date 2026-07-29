@@ -1,0 +1,59 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.astro/
+
+# environment
+#
+# Astro reads .env, .env.local and .env.[mode][.local], so the whole family is
+# ignored rather than the two names that happened to exist — a stray
+# .env.local holding a real Umami website ID would otherwise be committed.
+# .env.example is the tracked template, so it is exempt.
+.env
+.env.*
+!.env.example
+
+# test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# typescript incremental build info
+*.tsbuildinfo
+
+# logs
+*.log
+
+# editors
+# Shared workspace config stays tracked if it is ever added; personal state does not.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+
+# claude code
+#
+# Local overrides, plus CLAUDE.md itself — it carries the working brief and a
+# dated snapshot of repo state, which is context for working here rather than
+# part of what the site publishes.
+#
+# CLAUDE.md was tracked before this, so it also took `git rm --cached`:
+# .gitignore has no effect on a file git already tracks.
+.claude/settings.local.json
+CLAUDE.md
+
+# working docs — plans and handoffs, same reasoning as CLAUDE.md above: notes
+# for building the site rather than part of what it ships. Also previously
+# tracked, so it took `git rm -r --cached` too.
+docs/
+
+# os
+.DS_Store
+Thumbs.db
+
+# NOTE: package-lock.json is intentionally NOT ignored.
+# withastro/action detects the package manager from the committed lockfile.

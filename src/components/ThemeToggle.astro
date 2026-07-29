@@ -1,0 +1,145 @@
+---
+// The site's only interactive element, and deliberately not a React island —
+// hydrating a framework for one button would ship ~45 KB gzipped to a page
+// that is otherwise pure text.
+//
+// Styled directly rather than through shadcn's `buttonVariants`. That helper
+// was the last thing keeping React, radix-ui and cva in the dependency tree,
+// and Tailwind emitted its entire variant matrix — every size, every state,
+// six variants — into the stylesheet for a button that used one hover rule.
+//
+// 38px circle, growing to 44px on touch where it has to clear the tap-target
+// minimum. `cursor-pointer` is explicit because the browser default for
+// <button> is `default`, and the design specifies a pointer.
+const classes = [
+  'inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full',
+  'size-11 sm:size-[38px]',
+  'text-muted-foreground transition-colors outline-none select-none',
+  'hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
+  'focus-visible:ring-3 focus-visible:ring-ring/50',
+  '[&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0',
+].join(' ');
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  data-preference="system"
+  aria-label="Toggle theme"
+  title="Theme: system"
+  class={classes}
+>
+  <svg
+    data-icon-for="light"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4.2"></circle>
+    <path
+      d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"
+    ></path>
+  </svg>
+
+  <svg
+    data-icon-for="dark"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M20.2 14.6A8.6 8.6 0 1 1 9.4 3.8a6.8 6.8 0 0 0 10.8 10.8z"></path>
+  </svg>
+
+  <svg
+    data-icon-for="system"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="2.8" y="4.2" width="18.4" height="12.4" rx="2"></rect>
+    <path d="M8.6 20.2h6.8"></path>
+  </svg>
+
+  <span class="sr-only" data-theme-label>System theme</span>
+</button>
+
+<style>
+  /* Show only the icon matching the current preference. Driven by the
+     data attribute so no JavaScript is needed to pick the icon. */
+  [data-theme-toggle] svg {
+    display: none;
+  }
+  [data-theme-toggle][data-preference='light'] svg[data-icon-for='light'],
+  [data-theme-toggle][data-preference='dark'] svg[data-icon-for='dark'],
+  [data-theme-toggle][data-preference='system'] svg[data-icon-for='system'] {
+    display: block;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var toggle = document.querySelector('[data-theme-toggle]');
+    if (!toggle) return;
+
+    var ORDER = ['light', 'dark', 'system'];
+    var LABELS = { light: 'Light theme', dark: 'Dark theme', system: 'System theme' };
+    var TITLES = { light: 'Theme: light', dark: 'Theme: dark', system: 'Theme: system' };
+    var media = window.matchMedia('(prefers-color-scheme: dark)');
+    var label = toggle.querySelector('[data-theme-label]');
+
+    // Storage can throw outright in blocked-storage contexts, so every
+    // access is guarded and the site degrades to session-only behaviour.
+    function readPreference() {
+      try {
+        var stored = window.localStorage.getItem('theme');
+        return ORDER.indexOf(stored) === -1 ? 'system' : stored;
+      } catch (error) {
+        return 'system';
+      }
+    }
+
+    function writePreference(preference) {
+      try {
+        window.localStorage.setItem('theme', preference);
+      } catch (error) {
+        /* session-only */
+      }
+    }
+
+    function apply(preference) {
+      var dark = preference === 'dark' || (preference === 'system' && media.matches);
+      document.documentElement.classList.toggle('dark', dark);
+      toggle.setAttribute('data-preference', preference);
+      toggle.setAttribute('title', TITLES[preference]);
+      if (label) label.textContent = LABELS[preference];
+    }
+
+    apply(readPreference());
+
+    toggle.addEventListener('click', function () {
+      // Persist the literal choice, never the resolved theme — storing
+      // "dark" for a system preference would destroy the system option.
+      var next = ORDER[(ORDER.indexOf(readPreference()) + 1) % ORDER.length];
+      writePreference(next);
+      apply(next);
+    });
+
+    media.addEventListener('change', function () {
+      if (readPreference() === 'system') apply('system');
+    });
+  })();
+</script>

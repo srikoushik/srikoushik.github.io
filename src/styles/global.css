@@ -1,0 +1,203 @@
+/*
+ * Tailwind 4 theme.
+ *
+ * Tailwind 4 is configured CSS-first — there is deliberately no
+ * tailwind.config.js. Utilities are generated from what appears in source,
+ * so there is no purge step to misconfigure.
+ *
+ * The token names below are shadcn's (`background`, `muted-foreground`,
+ * `ring`) because they are good names and the design's ink levels map onto
+ * them cleanly. shadcn itself is no longer a dependency — nothing here
+ * rendered a shadcn component.
+ */
+@import "tailwindcss";
+
+/*
+ * Tailwind 4 detects sources automatically, which sweeps in every file git
+ * does not ignore — including this repo's markdown. Prose that happens to
+ * contain a word like `border` or `object-cover` was emitting real utilities
+ * into the shipped stylesheet, so documentation edits changed the CSS.
+ */
+@source not "../../**/*.md";
+
+/*
+ * Newsreader, optical-size + weight axes.
+ *
+ * `opsz.css` rather than the smaller `wght.css` (132 KB vs 58 KB for the latin
+ * subset) because this design runs one family from 10px eyebrows to a 44px
+ * name. Newsreader's opsz axis defaults to 16, so the weight-only file would
+ * set the name in letterforms cut for body copy — noticeably heavy serifs and
+ * loose fitting at display size. The opsz file carries both axes, and browsers
+ * drive opsz from the font size automatically via `font-optical-sizing: auto`.
+ *
+ * Three subsets ship (latin, latin-ext, vietnamese), each gated by
+ * `unicode-range`, so an English page downloads only the latin file.
+ */
+@import "@fontsource-variable/newsreader/opsz.css";
+
+/*
+ * Dark mode keys off a `.dark` class on the root element. The theme toggle
+ * and the head resolver are the only things that write it, so there is a
+ * single source of truth for the resolved theme.
+ */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /*
+   * One family for the whole site. `--font-sans` is left as the system stack
+   * rather than pointed at Newsreader: the base layer sets the document to
+   * `--font-serif`, so nothing silently inherits a serif from a token named
+   * "sans".
+   */
+  --font-serif: 'Newsreader Variable', Newsreader, Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /*
+   * The design's third ink level, below `muted-foreground`. Used for the
+   * uppercase eyebrows and the tech-stack labels, which must recede behind
+   * the values they label.
+   */
+  --color-faint: var(--faint);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/*
+ * Palette from the "flat surfaces" design, verbatim in oklch.
+ *
+ * Warm paper rather than neutral grey — every tone carries a little chroma on
+ * a yellow-orange hue (64-85), which is what keeps light mode reading as paper
+ * instead of white, and dark mode as ink instead of black.
+ *
+ * The design names four ink levels (ink, inkSoft, inkFaint, hairline) over two
+ * surfaces (pageBg, cardBg). Those map onto shadcn's tokens below; the
+ * comments record which design token each one carries.
+ */
+:root {
+  --background: oklch(0.975 0.006 85); /* pageBg */
+  --foreground: oklch(0.305 0.015 64); /* ink */
+  --muted: oklch(0.955 0.007 85); /* cardBg — the toggle's hover surface */
+  --muted-foreground: oklch(0.515 0.012 75); /* inkSoft */
+  --faint: oklch(0.665 0.01 78); /* inkFaint */
+  --border: oklch(0.315 0.012 70 / 0.16); /* hairline */
+
+  --card: oklch(0.955 0.007 85);
+  --card-foreground: oklch(0.305 0.015 64);
+  --popover: oklch(0.955 0.007 85);
+  --popover-foreground: oklch(0.305 0.015 64);
+  --primary: oklch(0.305 0.015 64);
+  --primary-foreground: oklch(0.975 0.006 85);
+  --secondary: oklch(0.955 0.007 85);
+  --secondary-foreground: oklch(0.305 0.015 64);
+  --accent: oklch(0.955 0.007 85);
+  --accent-foreground: oklch(0.305 0.015 64);
+  --destructive: oklch(0.577 0.245 27.325);
+  --input: oklch(0.315 0.012 70 / 0.16);
+  --ring: oklch(0.515 0.012 75);
+  --radius: 0.75rem;
+
+  /*
+   * The portrait is the one element that lifts off the flat surface, so this
+   * shadow is the design's only depth cue. Tinted with the ink hue rather
+   * than neutral black, so it reads as a shadow cast on paper.
+   */
+  --float-shadow:
+    0 30px 54px -24px oklch(0.315 0.012 70 / 0.3),
+    0 6px 14px -8px oklch(0.315 0.012 70 / 0.14);
+  --float-shadow-sm:
+    0 20px 36px -18px oklch(0.315 0.012 70 / 0.28),
+    0 5px 11px -6px oklch(0.315 0.012 70 / 0.12);
+}
+
+.dark {
+  --background: oklch(0.255 0.01 65); /* pageBg */
+  --foreground: oklch(0.905 0.013 85); /* ink */
+  --muted: oklch(0.305 0.01 65); /* cardBg */
+  --muted-foreground: oklch(0.755 0.01 78); /* inkSoft */
+  --faint: oklch(0.605 0.009 78); /* inkFaint */
+  --border: oklch(0.945 0.006 80 / 0.2); /* hairline */
+
+  --card: oklch(0.305 0.01 65);
+  --card-foreground: oklch(0.905 0.013 85);
+  --popover: oklch(0.305 0.01 65);
+  --popover-foreground: oklch(0.905 0.013 85);
+  --primary: oklch(0.905 0.013 85);
+  --primary-foreground: oklch(0.255 0.01 65);
+  --secondary: oklch(0.305 0.01 65);
+  --secondary-foreground: oklch(0.905 0.013 85);
+  --accent: oklch(0.305 0.01 65);
+  --accent-foreground: oklch(0.905 0.013 85);
+  --destructive: oklch(0.704 0.191 22.216);
+  --input: oklch(0.945 0.006 80 / 0.2);
+  --ring: oklch(0.755 0.01 78);
+
+  /*
+   * A tinted drop shadow is invisible against a dark surface, so dark mode
+   * trades most of the lift for a hairline ring that separates the portrait
+   * from the page.
+   */
+  --float-shadow:
+    0 34px 60px -26px rgb(0 0 0 / 0.55),
+    0 0 0 1px oklch(0.945 0.006 80 / 0.09);
+  --float-shadow-sm:
+    0 22px 40px -18px rgb(0 0 0 / 0.5),
+    0 0 0 1px oklch(0.945 0.006 80 / 0.09);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-serif;
+    /* Sizes span 10px to 44px, so let the opsz axis follow the size. */
+    font-optical-sizing: auto;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* The surface cross-fades rather than snapping when the theme changes. */
+    transition: background-color 260ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body {
+      transition: none;
+    }
+  }
+}
+
+/*
+ * Exposed as utilities so the portrait's lift is declared once and both the
+ * home card and the About header pick the right size.
+ */
+@utility shadow-float {
+  box-shadow: var(--float-shadow);
+}
+
+@utility shadow-float-sm {
+  box-shadow: var(--float-shadow-sm);
+}
