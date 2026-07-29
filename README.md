@@ -5,7 +5,7 @@ Personal site — a text-first card and an About page at
 
 Built with [Astro](https://astro.build) on Tailwind 4. No UI framework.
 Requires **Node ≥ 22.18** — 22.18 is where Node started importing TypeScript
-natively, which `scripts/generate-og-card.mjs` relies on.
+natively, which the `scripts/` generators rely on.
 
 ## Getting started
 
@@ -22,6 +22,7 @@ npm run dev      # http://localhost:4321
 | `npm test` | Playwright suite (builds first, then runs) |
 | `npm run typecheck` | `astro check` |
 | `npm run generate:og` | Regenerate the Open Graph share card |
+| `npm run generate:favicon` | Regenerate the favicon and touch icon |
 
 ## Where things live
 
@@ -128,6 +129,26 @@ always match what the metadata describes — regenerating after a copy change
 is the only step. The one exception is the visible hostname, a constant in
 the script that must match `site` in `astro.config.mjs`.
 `tests/seo.spec.ts` pins the card type and dimensions.
+
+## The icons
+
+`public/favicon.ico` (16/32/48) and `public/apple-touch-icon.png` (180) are
+the portrait cut to a circle by `npm run generate:favicon`
+(`scripts/generate-favicon.mjs`). No extra crop: the icons keep the
+portrait's own framing so the tab matches the hero, which renders the same
+square whole. sharp cannot write an ICO container, so the script packs the
+PNG frames into one itself.
+
+The touch icon is drawn on paper rather than cut out, because iOS composites
+transparency onto black behind its own rounded-square mask, and is written as
+a 256-colour PNG — indistinguishable at 180px, and a third of the truecolour
+file size.
+
+Both generators take their palette from `scripts/lib/design.mjs`, which
+restates the theme in sRGB because a Node script cannot read `global.css`.
+`tests/build-output.spec.ts` samples what the browser actually paints and
+fails if those constants or the `theme-color` metas drift from the
+stylesheet.
 
 ## Analytics
 

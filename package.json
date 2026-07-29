@@ -13,7 +13,8 @@
     "preview": "astro preview",
     "test": "playwright test",
     "typecheck": "astro check",
-    "generate:og": "node scripts/generate-og-card.mjs"
+    "generate:og": "node scripts/generate-og-card.mjs",
+    "generate:favicon": "node scripts/generate-favicon.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
