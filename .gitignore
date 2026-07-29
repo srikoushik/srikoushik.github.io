@@ -35,8 +35,16 @@ playwright/.cache/
 .idea/
 *.swp
 
-# claude code — local overrides only; committed project config is meant to be shared
+# claude code
+#
+# Local overrides, plus CLAUDE.md itself — it carries the working brief and a
+# dated snapshot of repo state, which is context for working here rather than
+# part of what the site publishes.
+#
+# CLAUDE.md was tracked before this, so it also took `git rm --cached`:
+# .gitignore has no effect on a file git already tracks.
 .claude/settings.local.json
+CLAUDE.md
 
 # os
 .DS_Store
