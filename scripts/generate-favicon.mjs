@@ -20,9 +20,14 @@ import { circleMask, PAPER } from './lib/design.mjs';
 
 const SOURCE = `public${site.personImage}`;
 
-// The sizes Windows and browsers actually pick between: 16 for the tab, 32
-// for the bookmark bar and Retina tabs, 48 for the Windows taskbar.
-const ICO_SIZES = [16, 32, 48];
+// 16 for the tab, 32 for the bookmark bar and Retina tabs.
+//
+// 48 was here for the Windows taskbar and desktop shortcuts, and cost 5.6 KB
+// of a 9.4 KB file — 60% of the icon for a surface no browser draws from. A
+// photographic roundel does not survive 16px legibly enough that anyone is
+// pinning this to a taskbar for recognition, and Windows scales 32 acceptably
+// where it does appear. Dropping it takes the file to ~3.8 KB.
+const ICO_SIZES = [16, 32];
 
 // iOS home screen. It applies its own rounded-square mask and composites
 // anything transparent onto black, so this one is drawn on paper rather than

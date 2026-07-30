@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import sharp from 'sharp';
 import { PAPER } from '../scripts/lib/design.mjs';
 
@@ -16,6 +17,30 @@ const CSS_BUDGET_BYTES = 20 * 1024;
 /** Every route that ships to users. Link and analytics rules apply to all. */
 const ROUTES = ['/', '/about'];
 
+/**
+ * Every stylesheet on the page, inline or linked, as source text.
+ *
+ * The build inlines its CSS, so a check that only followed
+ * `link[rel="stylesheet"]` would find nothing and pass against zero bytes —
+ * silently, and exactly when it was most worth checking. Both forms are
+ * collected so these hold whichever way the CSS ships.
+ */
+async function stylesheets(page: Page, request: APIRequestContext): Promise<string[]> {
+  const inline = await page
+    .locator('style')
+    .evaluateAll((nodes) => nodes.map((node) => node.textContent ?? ''));
+
+  const hrefs = await page
+    .locator('link[rel="stylesheet"]')
+    .evaluateAll((nodes) => nodes.map((node) => (node as HTMLLinkElement).href));
+
+  const linked = await Promise.all(hrefs.map(async (href) => (await request.get(href)).text()));
+
+  const all = [...inline, ...linked];
+  expect(all.join(''), 'no CSS found on the page at all').not.toHaveLength(0);
+  return all;
+}
+
 test('ships no framework JavaScript', async ({ page }) => {
   const scripts: string[] = [];
   page.on('request', (request) => {
@@ -32,14 +57,10 @@ test('ships no framework JavaScript', async ({ page }) => {
 test('keeps CSS within budget', async ({ page, request }) => {
   await page.goto('/');
 
-  const hrefs = await page
-    .locator('link[rel="stylesheet"]')
-    .evaluateAll((nodes) => nodes.map((node) => (node as HTMLLinkElement).href));
-
-  let total = 0;
-  for (const href of hrefs) {
-    total += Buffer.byteLength((await (await request.get(href)).text()));
-  }
+  const total = (await stylesheets(page, request)).reduce(
+    (bytes, css) => bytes + Buffer.byteLength(css),
+    0,
+  );
 
   expect(total, `stylesheets total ${total} bytes uncompressed`).toBeLessThan(CSS_BUDGET_BYTES);
 });
@@ -178,10 +199,154 @@ test('preloads the latin font subset', async ({ page, request }) => {
   expect(href).toMatch(/newsreader-latin-.*\.woff2$/);
   expect((await request.get(href!)).status()).toBe(200);
 
-  const css = await page
-    .locator('link[rel="stylesheet"]')
-    .evaluateAll((nodes) => nodes.map((node) => (node as HTMLLinkElement).href));
-  const sheets = await Promise.all(css.map(async (url) => (await request.get(url)).text()));
+  const sheets = await stylesheets(page, request);
   // Matched loosely because the built CSS is minified (`font-display:swap`).
   expect(sheets.join('')).toMatch(/font-display:\s*swap/);
 });
+
+// `swap` only stops being a visible flicker if the fallback occupies exactly
+// the space the real font will. This asserts the metric overrides in
+// `global.css` still hold: with the woff2 blocked, nothing on the page may sit
+// anywhere other than where it lands once Newsreader has loaded.
+//
+// The failure this catches is not subtle when it happens — before the
+// overrides, the opening bio paragraph wrapped to four lines in Georgia where
+// Newsreader takes three, dropping everything below it by 34px. It is subtle
+// to notice, because it only appears in the few hundred milliseconds before
+// the font arrives.
+//
+// Host-font dependent: the overrides only engage where one of the calibrated
+// faces is installed — Georgia or Times New Roman on macOS and Windows, or
+// the Liberation/Noto/DejaVu rules on Linux. deploy.yml's test job installs
+// fonts-liberation and fonts-dejavu-core precisely so the blocked pass has a
+// calibrated fallback to land on; on a machine with none of these, the test
+// falls through to a generic serif and fails honestly.
+for (const route of ROUTES) {
+  for (const width of [390, 1280]) {
+    test(`swaps ${route} into Newsreader without reflowing at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+
+      const positions = async (blocked: boolean) => {
+        // `intercepted`, not `route` — the loop's route is the page path.
+        if (blocked) await page.route('**/*.woff2', (intercepted) => intercepted.abort());
+        else await page.unroute('**/*.woff2');
+
+        await page.goto(route);
+        if (!blocked) await page.evaluate(() => document.fonts.ready);
+
+        return page.evaluate(() =>
+          [...document.querySelectorAll('h1, p, nav a, span')].map((el) => {
+            const box = el.getBoundingClientRect();
+            return { top: box.top, height: box.height };
+          }),
+        );
+      };
+
+      const fallback = await positions(true);
+      const loaded = await positions(false);
+
+      expect(fallback.length).toBeGreaterThan(0);
+      expect(fallback).toHaveLength(loaded.length);
+
+      // Sub-pixel tolerance only: a whole line is ~34px, so anything real
+      // fails this by two orders of magnitude.
+      for (const [i, box] of loaded.entries()) {
+        expect(Math.abs(box.top - fallback[i].top), `element ${i} moved on swap`).toBeLessThan(0.5);
+        expect(
+          Math.abs(box.height - fallback[i].height),
+          `element ${i} changed height on swap`,
+        ).toBeLessThan(0.5);
+      }
+    });
+  }
+}
+
+// The font carries only the characters src/content/site.ts needed when
+// `npm run generate:font` last ran. Adding a character to the copy without
+// regenerating would render it from a system serif — one glyph mid-word in
+// the wrong face, which is easy to miss in review and impossible to miss on
+// the page. This turns that into a failing test naming the character.
+//
+// The arrows are the documented exception: U+2190/2192/2197 are in none of
+// Newsreader's upstream subsets either, so they have always come from a
+// system font and are not something subsetting took away.
+const SYSTEM_RENDERED = new Set(['←', '→', '↗']);
+
+// The subset narrows Newsreader's wght and opsz axes to the ranges in
+// scripts/generate-font.mjs, so the build may not emit a weight or size
+// outside them — the browser would ask the font for a variation it no longer
+// carries, and get the nearest pinned instance instead: semibold at 600 is
+// fine, but a 700 or a 48px name would silently come out wrong. The bounds
+// come from the manifest the generator writes (the way the glyph-coverage
+// test below reads its codepoints), so widening them stays a one-file change
+// plus a regenerate, and a failure here always names the range actually
+// subset. The check runs against the emitted CSS rather than the templates
+// because that is what the browser matches against.
+//
+// Scoped to px: named text utilities would emit rem, which this does not
+// resolve. The design sizes everything in `text-[Npx]`, so nothing is missed
+// today; a named utility sneaking in weakens the guard rather than failing
+// it, which is worth knowing before reaching for one.
+test('keeps every emitted weight and size inside the subset', async ({ page, request }) => {
+  await page.goto('/');
+
+  const css = (await stylesheets(page, request)).join('');
+
+  const { weight: wght, opticalSize: opsz } = JSON.parse(
+    await readFile('src/assets/newsreader-latin-subset.json', 'utf8'),
+  );
+
+  const weights = [...css.matchAll(/font-weight:\s*(\d+)/g)].map((m) => Number(m[1]));
+  const sizes = [...css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
+
+  expect(weights.length, 'no font-weight declarations found at all').toBeGreaterThan(0);
+  expect(sizes.length, 'no px font-size declarations found at all').toBeGreaterThan(0);
+
+  for (const weight of weights) {
+    expect(
+      weight,
+      `font-weight ${weight} is outside the subset's wght ${wght.min}-${wght.max}`,
+    ).toBeGreaterThanOrEqual(wght.min);
+    expect(
+      weight,
+      `font-weight ${weight} is outside the subset's wght ${wght.min}-${wght.max}`,
+    ).toBeLessThanOrEqual(wght.max);
+  }
+
+  for (const size of sizes) {
+    expect(
+      size,
+      `font-size ${size}px is outside the subset's opsz ${opsz.min}-${opsz.max}`,
+    ).toBeGreaterThanOrEqual(opsz.min);
+    expect(
+      size,
+      `font-size ${size}px is outside the subset's opsz ${opsz.min}-${opsz.max}`,
+    ).toBeLessThanOrEqual(opsz.max);
+  }
+});
+
+for (const route of ROUTES) {
+  test(`renders ${route} entirely from the subset font`, async ({ page }) => {
+    await page.goto(route);
+
+    const rendered: string[] = await page.evaluate(() => {
+      const body = document.body.cloneNode(true) as HTMLElement;
+      body.querySelectorAll('script, style').forEach((node) => node.remove());
+      return [...new Set(body.textContent ?? '')];
+    });
+
+    const { codepoints } = JSON.parse(
+      await readFile('src/assets/newsreader-latin-subset.json', 'utf8'),
+    );
+    const covered = new Set((codepoints as number[]).map((c) => String.fromCodePoint(c)));
+
+    const missing = rendered.filter(
+      (char) => !covered.has(char) && !SYSTEM_RENDERED.has(char) && !/\s/.test(char),
+    );
+
+    expect(
+      missing,
+      `not in the subset — run \`npm run generate:font\`: ${missing.map((c) => `${c} (U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')})`).join(', ')}`,
+    ).toHaveLength(0);
+  });
+}

@@ -23,19 +23,123 @@
 @source "../**/*.astro";
 
 /*
- * Newsreader, optical-size + weight axes.
+ * Newsreader, optical-size + weight axes, subset to this site's own copy by
+ * `npm run generate:font` — see scripts/generate-font.mjs for what is dropped
+ * and why the two axes survive it (132 KB upstream, ~52 KB here).
  *
- * `opsz.css` rather than the smaller `wght.css` (132 KB vs 58 KB for the latin
- * subset) because this design runs one family from 10px eyebrows to a 44px
- * name. Newsreader's opsz axis defaults to 16, so the weight-only file would
- * set the name in letterforms cut for body copy — noticeably heavy serifs and
- * loose fitting at display size. The opsz file carries both axes, and browsers
- * drive opsz from the font size automatically via `font-optical-sizing: auto`.
+ * Declared by hand rather than through fontsource's `opsz.css`, which brings
+ * three `unicode-range`-gated subsets with it. Only the latin one was ever
+ * requested: every non-ASCII character these pages render is either inside it
+ * or, in the case of the ← → ↗ arrows, in none of the three — those come from
+ * a system font and always have. The latin-ext and vietnamese files were
+ * 114 KB of deploy artifact that no visitor could reach.
  *
- * Three subsets ship (latin, latin-ext, vietnamese), each gated by
- * `unicode-range`, so an English page downloads only the latin file.
+ * No `unicode-range` for the same reason: one file, always needed.
  */
-@import "@fontsource-variable/newsreader/opsz.css";
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 600;
+  src: url('../assets/newsreader-latin-subset.woff2') format('woff2-variations');
+}
+
+/*
+ * Metric-matched fallbacks, so `font-display: swap` stops reflowing the page.
+ *
+ * The latin subset is 132 KB and lands 300-500ms in. Until it does, `swap`
+ * sets everything in Georgia — and Georgia is a far taller face than
+ * Newsreader: measured off the loaded fonts, its ascent is 0.917em against
+ * Newsreader's 0.735em, and it sits 3% narrower. So the swap does not just
+ * change letterforms, it moves every baseline on the page. On a design that
+ * is entirely type, that is the flicker.
+ *
+ * Overriding the fallback's own metrics to Newsreader's makes the two occupy
+ * the same space. The swap still happens, but nothing reflows — the shapes
+ * change in place. Values are measured, not guessed:
+ *
+ *   size-adjust      = Newsreader width / fallback width, at the size the
+ *                      wrapping text actually renders at
+ *   ascent-override  = Newsreader ascent / size-adjust
+ *
+ * `size-adjust` is calibrated on the bio paragraphs rather than on the whole
+ * page, because line count is what actually moves things: with plain Georgia
+ * the opening paragraph wrapped to four lines where Newsreader takes three,
+ * and that one extra line pushed everything below it down by 34px.
+ *
+ * It has to be measured through the DOM, not `canvas.measureText`. Canvas
+ * ignores `font-optical-sizing`, so it reports Newsreader at its tightest
+ * optical cut — which put the ratio at 103% when the 20px body copy that does
+ * the wrapping actually needs 91%. The two disagree by 12 points, and the
+ * canvas figure makes the fallback wider than the real font rather than
+ * narrower.
+ *
+ * One family per source face rather than two `src` lines under one name:
+ * same-name `@font-face` rules with the same `unicode-range` do not fall
+ * back to each other — the last match would simply win. Listed separately,
+ * a failed `local()` drops through to the next family as intended.
+ */
+@font-face {
+  font-family: 'Newsreader Fallback Georgia';
+  src: local('Georgia');
+  size-adjust: 92%;
+  ascent-override: 79.89%;
+  descent-override: 28.8%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Newsreader Fallback Times';
+  src: local('Times New Roman');
+  size-adjust: 100%;
+  ascent-override: 73.5%;
+  descent-override: 26.5%;
+  line-gap-override: 0%;
+}
+
+/*
+ * Linux, where neither Georgia nor Times New Roman is normally installed and
+ * the stack would otherwise reach generic `serif` unadjusted — the one case
+ * the overrides above do nothing for.
+ *
+ * Liberation Serif reuses the Times New Roman numbers rather than its own
+ * measurement: metric compatibility with Times is the whole point of the
+ * Liberation family, so the same advance widths are its design guarantee.
+ * The other two were measured the same way as Georgia — through the DOM, at
+ * the 17px and 20px the body copy actually wraps at. Both are appreciably
+ * wider than Newsreader, hence the aggressive `size-adjust`; DejaVu most of
+ * all, at 79%.
+ *
+ * Whichever one a given machine has, the layout is identical — the ordering
+ * below decides only which letterforms are shown for the few hundred
+ * milliseconds before the swap, not where anything sits.
+ */
+@font-face {
+  font-family: 'Newsreader Fallback Liberation';
+  src: local('Liberation Serif');
+  size-adjust: 100%;
+  ascent-override: 73.5%;
+  descent-override: 26.5%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Newsreader Fallback Noto';
+  src: local('Noto Serif');
+  size-adjust: 85.15%;
+  ascent-override: 86.32%;
+  descent-override: 31.12%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Newsreader Fallback DejaVu';
+  src: local('DejaVu Serif');
+  size-adjust: 78.8%;
+  ascent-override: 93.27%;
+  descent-override: 33.63%;
+  line-gap-override: 0%;
+}
 
 /*
  * Dark mode keys off a `.dark` class on the root element. The theme toggle
@@ -51,7 +155,18 @@
    * `--font-serif`, so nothing silently inherits a serif from a token named
    * "sans".
    */
-  --font-serif: 'Newsreader Variable', Newsreader, Georgia, 'Times New Roman', serif;
+  /*
+   * The two `Newsreader Fallback *` entries sit ahead of the bare families
+   * they wrap: each is that face with Newsreader's metrics forced onto it, so
+   * whichever one the reader has installed holds the layout until the real
+   * font arrives. The unadjusted names stay at the end for anyone who has
+   * neither, where an unmatched fallback still beats no serif at all.
+   */
+  --font-serif:
+    'Newsreader Variable', Newsreader, 'Newsreader Fallback Georgia',
+    'Newsreader Fallback Times', 'Newsreader Fallback Liberation',
+    'Newsreader Fallback Noto', 'Newsreader Fallback DejaVu', Georgia,
+    'Times New Roman', serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   /*
