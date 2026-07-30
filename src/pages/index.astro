@@ -1,9 +1,12 @@
 ---
-import { Image } from 'astro:assets';
-import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import OutboundLink from '@/components/OutboundLink.astro';
 import { site } from '@/content/site';
+import { inlineImage } from '@/lib/inline-image';
+
+// 352px is the 176px box at 2x. Inlined rather than fetched so the portrait
+// paints with the document instead of a round trip later — see `inline-image`.
+const avatar = await inlineImage('me.jpg', 352);
 
 /**
  * The home card.
@@ -28,13 +31,18 @@ import { site } from '@/content/site';
   <main
     class="flex min-h-dvh flex-col items-center justify-center px-[22px] sm:flex-row sm:gap-[44px] sm:px-12"
   >
-    <Image
+    {/*
+      `decoding="sync"` rather than Astro's `async` default: the bytes are
+      already here, so the only thing an async decode can add is a frame in
+      which the circle is empty. There is no `loading` attribute for the same
+      reason — nothing is being loaded.
+    */}
+    <img
       src={avatar}
       alt={`Portrait of ${site.name}`}
       width={176}
       height={176}
-      densities={[1, 2]}
-      loading="eager"
+      decoding="sync"
       class="shadow-float-sm sm:shadow-float size-[172px] shrink-0 rounded-full object-cover sm:size-[176px]"
     />
 

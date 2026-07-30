@@ -1,10 +1,12 @@
 ---
-import { Image } from 'astro:assets';
-import avatar from '@/assets/me.jpg';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import LabeledRows from '@/components/LabeledRows.astro';
 import OutboundLink from '@/components/OutboundLink.astro';
 import { site } from '@/content/site';
+import { inlineImage } from '@/lib/inline-image';
+
+// 164px is the 82px box at 2x. Inlined rather than fetched — see `inline-image`.
+const avatar = await inlineImage('me.jpg', 164);
 
 /**
  * The About view.
@@ -39,13 +41,13 @@ import { site } from '@/content/site';
     </a>
 
     <header class="flex items-center gap-[16px] sm:gap-[22px]">
-      <Image
+      {/* Inline bytes, so decode synchronously — see the note on the home card. */}
+      <img
         src={avatar}
         alt={`Portrait of ${site.name}`}
         width={82}
         height={82}
-        densities={[1, 2]}
-        loading="eager"
+        decoding="sync"
         class="shadow-float-sm size-[62px] shrink-0 rounded-full object-cover sm:size-[82px]"
       />
       <div class="flex flex-col gap-[6px] sm:gap-[7px]">

@@ -22,7 +22,50 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Nothing publishes until this passes. The suite asserts properties of the
+  # built output — no framework JS, the CSS budget, a no-flash first paint,
+  # every rendered character present in the subset font — and every one of
+  # them is the kind of thing a routine dependency bump can quietly undo.
+  test:
+    runs-on: ubuntu-latest
+    # No `pages: write` here: this job runs the repo's own test code, which is
+    # a far wider surface than the pinned actions below. It only needs to read
+    # the checkout.
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # The runner has neither Georgia nor Times New Roman, so the font-swap
+      # reflow test would otherwise fall through to whatever generic serif the
+      # image happens to ship and assert nothing meaningful. These are the two
+      # faces the Linux `@font-face` overrides in global.css are calibrated
+      # against, so installing them is what makes that test a real check here.
+      - name: Install the serif fallbacks the overrides target
+        run: sudo apt-get update && sudo apt-get install -y fonts-liberation fonts-dejavu-core
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Builds and previews on its own, via `webServer` in playwright.config.ts.
+      - name: Test
+        run: npm test
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       # Actions are pinned to commit SHAs, not tags. A tag is mutable — its

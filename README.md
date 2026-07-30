@@ -23,6 +23,7 @@ npm run dev      # http://localhost:4321
 | `npm run typecheck` | `astro check` |
 | `npm run generate:og` | Regenerate the Open Graph share card |
 | `npm run generate:favicon` | Regenerate the favicon and touch icon |
+| `npm run generate:font` | Resubset Newsreader after copy changes |
 
 ## Where things live
 
@@ -37,6 +38,7 @@ src/
     Seo.astro            metadata, Open Graph, JSON-LD
     ThemeToggle.astro    light / dark / system
     OutboundLink.astro   a link that leaves the site
+  lib/inline-image.ts    inlines an src/assets image as a data URI at build time
   styles/global.css      Tailwind + theme tokens
 tests/                   Playwright specs
   analytics.spec.ts      builds with a website ID; the rest build without
@@ -94,10 +96,24 @@ declared; shadcn's `card`, `popover`, `primary`, `secondary`, `accent`,
 the full token set.
 
 **Typography is Newsreader**, and the whole site is set in it — from 10px
-eyebrows to the 44px name. `global.css` imports the two-axis (`opsz` + `wght`)
-file rather than the smaller weight-only one: Newsreader's optical-size axis
-defaults to 16, so the weight-only file would set the name in letterforms cut
-for body copy. It costs 132 KB against 58 KB for the latin subset.
+eyebrows to the 44px name. `npm run generate:font`
+(`scripts/generate-font.mjs`) subsets the two-axis (`opsz` + `wght`) file to
+the site's own characters, weights 400-600 and optical sizes 10-44 — 132 KB
+down to ~52 KB, with both axes intact. The axes matter: Newsreader's opsz
+defaults to 16, so a weight-only or pinned-opsz file would set the name in
+letterforms cut for body copy. **Re-run it after editing copy in
+`src/content/site.ts`** — a character the subset lacks renders in a system
+serif mid-word, and `tests/build-output.spec.ts` fails naming the character.
+
+Until the font lands, `font-display: swap` sets everything in a fallback —
+and a plain fallback reflows the page when the swap happens, because Georgia
+and Newsreader occupy different space. `global.css` declares metric-matched
+`@font-face` fallbacks (Georgia and Times New Roman, plus Liberation, Noto
+and DejaVu for Linux) with Newsreader's metrics forced onto them, so whatever
+the reader has installed holds the layout and the swap changes shapes only.
+The no-reflow property is tested at 390px and 1280px on both routes; CI
+installs the Liberation and DejaVu packages so the calibrated fallbacks
+exist there too.
 
 ## The profile photo
 
@@ -115,9 +131,11 @@ sharp('me-source.jpg').extract(CROP).resize(512, 512).toFile('src/assets/me.jpg'
 sharp('me-source.jpg').extract(CROP).resize(1200, 1200).toFile('public/me.jpg');
 ```
 
-Both live where they do for a reason: `src/assets/` gets the avatar
-processed and hashed by `astro:assets`, while `public/me.jpg` needs a stable
-URL that does not change between builds.
+Both live where they do for a reason: `src/assets/me.jpg` is inlined into
+each page as a WebP data URI at build time (`src/lib/inline-image.ts`), so
+the portrait arrives inside the document rather than costing a second
+request, while `public/me.jpg` is the `Person` image in the structured data
+and needs a stable URL that does not change between builds.
 
 ## The share card
 
@@ -132,7 +150,7 @@ the script that must match `site` in `astro.config.mjs`.
 
 ## The icons
 
-`public/favicon.ico` (16/32/48) and `public/apple-touch-icon.png` (180) are
+`public/favicon.ico` (16/32) and `public/apple-touch-icon.png` (180) are
 the portrait cut to a circle by `npm run generate:favicon`
 (`scripts/generate-favicon.mjs`). No extra crop: the icons keep the
 portrait's own framing so the tab matches the hero, which renders the same
@@ -199,8 +217,12 @@ a second `h1`, giving three failures unrelated to whatever you changed.
 
 ## Deployment
 
-Pushing to `master` triggers `.github/workflows/deploy.yml`, which builds and
-publishes via GitHub Pages Actions. `master` is the only branch: it is the
+Pushing to `master` triggers `.github/workflows/deploy.yml`, which runs the
+typecheck and the full Playwright suite first — nothing publishes until they
+pass — then builds and publishes via GitHub Pages Actions. The test job
+apt-installs the Liberation and DejaVu fonts because the runner ships with
+neither Georgia nor Times New Roman, and the font-swap reflow tests need one
+of the calibrated fallbacks to exist. `master` is the only branch: it is the
 source of truth and the deploy trigger.
 
 The two-branch split this repo used to have existed because the old deploy
