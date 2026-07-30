@@ -132,12 +132,25 @@
   line-gap-override: 0%;
 }
 
+/*
+ * DejaVu is the one that has to be exact rather than close: fontconfig makes
+ * it the face nearly every Linux visitor actually lands on, whichever name
+ * the first entry happens to use.
+ *
+ * 79.9% is measured against the rendered pages on Linux, not derived from the
+ * two body sizes the way the others are. Averaging the 17px and 20px ratios
+ * gives 78.8%, and that is ~1% out at each end — because Newsreader's width
+ * moves with `opsz` while DejaVu's does not, so no single number satisfies
+ * both sizes. A 1% error is not academic here: it wrapped the bio to a fourth
+ * line at 390px. Sweeping the value against both breakpoints puts the range
+ * that reflows nowhere at 79.5-80.3%, and this is its centre.
+ */
 @font-face {
   font-family: 'Newsreader Fallback DejaVu';
   src: local('DejaVu Serif');
-  size-adjust: 78.8%;
-  ascent-override: 93.27%;
-  descent-override: 33.63%;
+  size-adjust: 79.9%;
+  ascent-override: 91.99%;
+  descent-override: 33.17%;
   line-gap-override: 0%;
 }
 
@@ -156,16 +169,34 @@
    * "sans".
    */
   /*
-   * The two `Newsreader Fallback *` entries sit ahead of the bare families
-   * they wrap: each is that face with Newsreader's metrics forced onto it, so
-   * whichever one the reader has installed holds the layout until the real
-   * font arrives. The unadjusted names stay at the end for anyone who has
-   * neither, where an unmatched fallback still beats no serif at all.
+   * The `Newsreader Fallback *` entries sit ahead of the bare families they
+   * wrap: each is that face with Newsreader's metrics forced onto it, so the
+   * one the reader has holds the layout until the real font arrives. The
+   * unadjusted names stay at the end for anyone who has none of them, where
+   * an unmatched fallback still beats no serif at all.
+   *
+   * Ordered by how narrowly available each face is, not by preference, and
+   * that ordering is load-bearing. `local()` does not fail on Linux the way
+   * it does on macOS and Windows — fontconfig substitutes a best match
+   * instead, so a name that resolves to nothing still binds to *something*.
+   * On a stock Ubuntu image `local('Georgia')` resolves to DejaVu Serif, and
+   * `local('Noto Serif')` to DejaVu *Sans*.
+   *
+   * That means the first entry always wins on Linux, whatever it names. So
+   * the Linux-only faces go first, where they either match themselves or
+   * substitute to a near neighbour: DejaVu leads because it is what
+   * `fc-match serif` returns on Debian and Ubuntu. Georgia and Times follow,
+   * unreachable on Linux but exact on the platforms that do have them, since
+   * there `local('DejaVu Serif')` genuinely fails and falls through.
+   *
+   * Putting Georgia first — the obvious reading order — is what broke CI:
+   * every Linux visitor got Georgia's 92% applied to DejaVu's outlines, a 17%
+   * width error that wrapped a paragraph onto a fourth line.
    */
   --font-serif:
-    'Newsreader Variable', Newsreader, 'Newsreader Fallback Georgia',
-    'Newsreader Fallback Times', 'Newsreader Fallback Liberation',
-    'Newsreader Fallback Noto', 'Newsreader Fallback DejaVu', Georgia,
+    'Newsreader Variable', Newsreader, 'Newsreader Fallback DejaVu',
+    'Newsreader Fallback Noto', 'Newsreader Fallback Liberation',
+    'Newsreader Fallback Georgia', 'Newsreader Fallback Times', Georgia,
     'Times New Roman', serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
