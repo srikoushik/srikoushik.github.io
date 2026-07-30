@@ -96,10 +96,10 @@ export const site: SiteContent = {
   identity: 'I design systems and build teams that ship',
 
   homeDescription:
-    'Koushik — software engineer designing platforms and scalable distributed systems, and building teams that ship.',
+    'Koushik — software engineer designing platforms, distributed systems, and building teams that ship.',
 
   aboutDescription:
-    'About Koushik — a software engineer working with TypeScript, Node.js, React and AWS, and building teams that deliver.',
+    'About Koushik — software engineer designing platforms, distributed systems, and building teams that ship.',
 
   bio: [
     {
