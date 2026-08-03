@@ -20,13 +20,13 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.1.5",
+    "astro": "^7.1.6",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@fontsource-variable/newsreader": "^5.3.0",
-    "@playwright/test": "^1.62.0",
+    "@playwright/test": "^1.62.1",
     "sharp": "^0.35.3",
     "subset-font": "^2.5.0",
     "typescript": "^6.0.3"
