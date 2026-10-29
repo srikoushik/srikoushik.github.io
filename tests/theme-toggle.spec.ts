@@ -169,4 +169,42 @@ test.describe('theme toggle', () => {
     await expect(toggle).toBeVisible();
     expect(errors, `unexpected page errors: ${errors.join(', ')}`).toHaveLength(0);
   });
+
+  // On a phone the column runs to within 26px of the edge, under the corner
+  // the toggle sits in, so a toggle that stays put while the page scrolls
+  // ends up on top of the prose. Walks the whole page and checks the toggle
+  // never covers a line of text at any scroll position.
+  test('never covers text while scrolling on a phone', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/about/');
+
+    const covered = await page.evaluate(async (toggleSelector) => {
+      const toggle = document.querySelector(toggleSelector)!;
+      const hits = new Set<string>();
+      const max = document.documentElement.scrollHeight - innerHeight;
+
+      for (let y = 0; y <= max + 50; y += 50) {
+        scrollTo(0, Math.min(y, max));
+        await new Promise(requestAnimationFrame);
+        const t = toggle.getBoundingClientRect();
+
+        // Line boxes of every text node, not element boxes: a paragraph's
+        // box spans the full column even where its last line is short.
+        const walker = document.createTreeWalker(document.querySelector('main')!, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.textContent!.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const r of range.getClientRects()) {
+            if (r.left < t.right && r.right > t.left && r.top < t.bottom && r.bottom > t.top) {
+              hits.add(node.textContent!.trim().slice(0, 40));
+            }
+          }
+        }
+      }
+      return [...hits];
+    }, TOGGLE);
+
+    expect(covered, `toggle covers: ${covered.join(' | ')}`).toEqual([]);
+  });
 });
