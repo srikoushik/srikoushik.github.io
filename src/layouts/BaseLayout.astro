@@ -129,11 +129,15 @@ const trackingEnabled = import.meta.env.PROD && Boolean(umamiWebsiteId);
   </head>
   <body>
     {/*
-      Fixed rather than in flow, so it cannot disturb the centring of the page
-      beneath it. Offsets are the design's: tighter on mobile, where the
+      Out of flow, so it cannot disturb the centring of the page beneath it.
+      Absolute rather than fixed: on phones and narrow windows the column
+      reaches the corner, and a fixed control would sit on top of the text as
+      it scrolls past.
+      Both pages start below it, so it only ever shares the top of the page
+      with empty space. Offsets are the design's: tighter on mobile, where the
       control also grows to clear the 44px tap-target minimum.
     */}
-    <div class="fixed top-[18px] right-[18px] z-10 sm:top-[28px] sm:right-[30px]">
+    <div class="absolute top-[18px] right-[18px] z-10 sm:top-[28px] sm:right-[30px]">
       <ThemeToggle />
     </div>
     <slot />
