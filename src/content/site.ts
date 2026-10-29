@@ -38,12 +38,17 @@ export interface BioParagraph {
   text: string;
 }
 
-/** One row of a `LabeledRows` section — the tech stack and the interests. */
+/** One row of a `LabeledRows` section — the tech stack, interests, open source. */
 export interface LabeledRow {
   /** Left column. Recedes behind the value it labels. */
   label: string;
   /** Right column. Free-form, comma-separated. */
   value: string;
+  /**
+   * Makes the label an outbound link. The label doubles as the link text, so
+   * only the destination and the Umami event name are given here.
+   */
+  link?: Pick<Link, 'href' | 'event'>;
 }
 
 export interface SiteContent {
@@ -61,6 +66,12 @@ export interface SiteContent {
   /** Feeds `knowsAbout` in the structured data as well as the About page. */
   stack: LabeledRow[];
   interests: LabeledRow[];
+  /**
+   * Projects contributed to. The value says what the project is, not what I
+   * did there; the link points at my pull requests rather than the repo root,
+   * so the contribution is one click away and stays current without edits.
+   */
+  openSource: LabeledRow[];
   /** Rendered as text links on the home card, and used as `sameAs`. */
   profiles: Link[];
   /** Rendered in the About page footer. */
@@ -122,6 +133,17 @@ export const site: SiteContent = {
     { label: 'Learning', value: 'Functional programming with OCaml' },
     { label: 'Training', value: 'Kettlebells' },
     { label: 'Seasonal', value: 'Swimming, Running, Motorcycle touring, Hiking' },
+  ],
+
+  openSource: [
+    {
+      label: 'CoRE Stack',
+      value: 'Digital public infrastructure for climate adaptation in rural communities',
+      link: {
+        href: 'https://github.com/core-stack-org/core-stack-backend/pulls?q=is%3Apr+author%3Asrikoushik',
+        event: 'about-outbound-core-stack',
+      },
+    },
   ],
 
   // These two are the `sameAs` set in the structured data, so they must be
