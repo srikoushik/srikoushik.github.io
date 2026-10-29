@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+# A new push to the same PR supersedes the run in progress.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # `pull_request` checks out the merge of the PR into master, so this tests
+  # the tree that would land, not just the branch in isolation.
+  test:
+    uses: ./.github/workflows/test.yml
+
+  # Dependabot minor and patch bumps merge themselves once the suite is green.
+  # That is where the security fixes arrive, and the suite is the real gate on
+  # them — see the `minor-and-patch` group in dependabot.yml. Majors are left
+  # for a human, for the same reason dependabot.yml keeps them out of the group.
+  #
+  # This merges directly rather than through GitHub's auto-merge. A merge made
+  # with GITHUB_TOKEN does not fire `push`, so deploy.yml would never see it
+  # either way; merging here is what lets the next step dispatch the deploy.
+  auto-merge:
+    needs: test
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Read the Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Merge
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ github.token }}
+
+      # `workflow_dispatch` is the one trigger GITHUB_TOKEN is allowed to fire,
+      # so this is how a bot merge reaches the live site.
+      - name: Deploy
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh workflow run deploy.yml --ref master --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ github.token }}
