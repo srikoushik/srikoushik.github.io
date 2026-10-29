@@ -49,8 +49,10 @@ test.describe('metadata', () => {
     const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
     const ogImage = await contentOf(page, 'meta[property="og:image"]');
 
-    expect(canonical).toMatch(new RegExp(`^${ORIGIN}`));
-    expect(ogImage).toMatch(new RegExp(`^${ORIGIN}`));
+    // Parsed, not pattern-matched: a relative URL makes `new URL` throw, and
+    // a prefix check would also accept a lookalike host.
+    expect(new URL(canonical!).origin).toBe(ORIGIN);
+    expect(new URL(ogImage!).origin).toBe(ORIGIN);
   });
 
   test('keeps the Search Console verification tag', async ({ page }) => {
@@ -92,8 +94,10 @@ test.describe('structured data', () => {
     const raw = await page.locator('script[type="application/ld+json"]').textContent();
     const sameAs: string[] = JSON.parse(raw!).mainEntity.sameAs;
 
-    expect(sameAs.some((url) => url.includes('linkedin.com'))).toBe(true);
-    expect(sameAs.some((url) => url.includes('github.com'))).toBe(true);
+    // By hostname: a substring would also match the name in a path or query.
+    const hosts = sameAs.map((url) => new URL(url).hostname);
+    expect(hosts).toContain('www.linkedin.com');
+    expect(hosts).toContain('github.com');
 
     // Structured data disagreeing with the rendered page is worse than none.
     const visible = await page.locator('a[href^="http"]').evaluateAll((nodes) =>
@@ -145,7 +149,7 @@ test.describe('crawlability and semantics', () => {
     const path = new URL(index.match(/<loc>([^<]+sitemap-0\.xml)<\/loc>/)![1]).pathname;
     const sitemap = await (await request.get(path)).text();
 
-    expect(sitemap).toMatch(new RegExp(`<loc>${ORIGIN}/</loc>`));
+    expect(sitemap).toContain(`<loc>${ORIGIN}/</loc>`);
     expect(sitemap).toContain(`${ORIGIN}/about`);
   });
 
