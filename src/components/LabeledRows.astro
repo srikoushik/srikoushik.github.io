@@ -4,9 +4,9 @@ import type { LabeledRow } from '@/content/site';
 /**
  * A small-caps heading over a two-column list of label/value pairs.
  *
- * About renders this twice — the tech stack and the interests — and the two
- * are the same object visually and semantically, so the layout is stated once
- * here rather than copied per section.
+ * About renders this three times — open source, interests and the tech stack
+ * — and they are the same object visually and semantically, so the layout is
+ * stated once here rather than copied per section.
  */
 interface Props {
   title: string;
@@ -35,7 +35,25 @@ const { title, rows } = Astro.props;
     {
       rows.map((row) => (
         <div class="flex flex-col gap-[3px] sm:contents">
-          <dt class="text-faint">{row.label}</dt>
+          <dt class="text-faint">
+            {row.link ? (
+              // The padding and matching negative margin grow the tap area on
+              // phones without moving the row; the border echoes the inline
+              // style OutboundLink takes from `sm` up.
+              <a
+                href={row.link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-umami-event={row.link.event}
+                class="text-muted-foreground hover:text-foreground border-border -my-[12px] inline-block border-b py-[12px] transition-colors sm:my-0 sm:py-0"
+              >
+                {row.label}
+                <span aria-hidden="true" class="ml-[0.3em]">↗</span>
+              </a>
+            ) : (
+              row.label
+            )}
+          </dt>
           <dd class="text-muted-foreground">{row.value}</dd>
         </div>
       ))
