@@ -215,6 +215,25 @@ are properties of the build, not the dev server.
 used instead of a production build. The sitemap 404s and the dev toolbar adds
 a second `h1`, giving three failures unrelated to whatever you changed.
 
+### Screenshot tests
+
+`tests/visual.spec.ts` compares eight full-page screenshots (both routes, both
+themes, 390px and 1280px) pixel for pixel against the PNGs in
+`tests/visual.spec.ts-snapshots/`. Font rasterisation differs by OS, so the
+baselines are rendered on the Linux CI runner and the spec skips on macOS.
+
+When one fails in CI, the run's `screenshot-diffs` artifact holds the expected,
+actual and diff images. If the change is intended, re-render the baselines on
+the branch and commit them:
+
+```sh
+gh workflow run update-snapshots.yml --ref <branch>
+gh run download --name screenshot-baselines --dir tests/
+```
+
+Expect this after Playwright bumps too: a new Chromium can shift anti-aliasing,
+so Dependabot's Playwright PRs may need fresh baselines before they can merge.
+
 ## Deployment
 
 Pushing to `master` triggers `.github/workflows/deploy.yml`, which runs the

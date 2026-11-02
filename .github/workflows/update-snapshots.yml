@@ -1,0 +1,23 @@
+name: Update screenshots
+
+# Re-renders the screenshot baselines on the same runner and setup the
+# comparison uses, and uploads them as the `screenshot-baselines` artifact.
+# Run it on a branch after an intended visual change, look at the images, and
+# commit them:
+#
+#   gh workflow run update-snapshots.yml --ref <branch>
+#   gh run download --name screenshot-baselines --dir tests/
+#
+# It never commits by itself: a new baseline is a claim that the page now
+# looks right, which is a person's call.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      update-snapshots: true
