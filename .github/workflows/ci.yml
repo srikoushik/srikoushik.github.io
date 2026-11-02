@@ -18,10 +18,11 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
 
-  # Dependabot minor and patch bumps merge themselves once the suite is green.
-  # That is where the security fixes arrive, and the suite is the real gate on
-  # them — see the `minor-and-patch` group in dependabot.yml. Majors are left
-  # for a human, for the same reason dependabot.yml keeps them out of the group.
+  # Dependabot minor and patch bumps to stable releases merge themselves once
+  # the suite is green. That is where the security fixes arrive, and the suite
+  # is the real gate on them — see the `minor-and-patch` group in
+  # dependabot.yml. Majors and pre-releases are left for a human, for the same
+  # reason dependabot.yml keeps majors out of the group.
   #
   # This merges directly rather than through GitHub's auto-merge. A merge made
   # with GITHUB_TOKEN does not fire `push`, so deploy.yml would never see it
@@ -39,8 +40,36 @@ jobs:
         id: meta
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
 
+      # An allowlist, so anything unrecognised stays for a human. Two cases the
+      # update type alone gets wrong:
+      # - fetch-metadata compares dot-separated parts, so 7.4.2 -> 7.5.0-beta.1
+      #   reads as minor and 7.4.2 -> 7.4.3-alpha.0 as patch. Every new version
+      #   must be plain numbers and dots to count as stable.
+      # - It reports an empty update type when it cannot read the versions.
+      # Missing or malformed metadata is skipped the same way.
+      - name: Decide
+        id: gate
+        env:
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          UPDATED: ${{ steps.meta.outputs.updated-dependencies-json }}
+        run: |
+          skip() { echo "::notice::Not auto-merging: $1"; echo "merge=false" >> "$GITHUB_OUTPUT"; exit 0; }
+
+          case "$UPDATE_TYPE" in
+            version-update:semver-minor|version-update:semver-patch) ;;
+            *) skip "update type is '${UPDATE_TYPE:-unknown}'" ;;
+          esac
+
+          [ "$(jq 'length' <<<"$UPDATED")" -gt 0 ] || skip "no updated dependencies reported"
+
+          unstable=$(jq -r '[.[] | select((.newVersion // "") | test("^v?[0-9]+(\\.[0-9]+)*$") | not)
+            | "\(.dependencyName) \(.newVersion)"] | join(", ")' <<<"$UPDATED")
+          [ -z "$unstable" ] || skip "not a stable release: $unstable"
+
+          echo "merge=true" >> "$GITHUB_OUTPUT"
+
       - name: Merge
-        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        if: steps.gate.outputs.merge == 'true'
         run: gh pr merge --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
@@ -49,7 +78,7 @@ jobs:
       # `workflow_dispatch` is the one trigger GITHUB_TOKEN is allowed to fire,
       # so this is how a bot merge reaches the live site.
       - name: Deploy
-        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        if: steps.gate.outputs.merge == 'true'
         run: gh workflow run deploy.yml --ref master --repo "$GITHUB_REPOSITORY"
         env:
           GH_TOKEN: ${{ github.token }}
