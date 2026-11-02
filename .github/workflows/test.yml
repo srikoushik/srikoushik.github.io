@@ -5,6 +5,12 @@ name: Test
 # it here means the gate a PR passes and the gate a deploy passes cannot drift.
 on:
   workflow_call:
+    inputs:
+      # Re-renders the screenshot baselines instead of comparing against them.
+      # Only update-snapshots.yml sets it.
+      update-snapshots:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -49,4 +55,25 @@ jobs:
 
       # Builds and previews on its own, via `webServer` in playwright.config.ts.
       - name: Test
-        run: npm test
+        run: npm test -- ${{ inputs.update-snapshots && '--update-snapshots' || '' }}
+
+      # Expected, actual and diff images for any screenshot that changed, so a
+      # failure can be seen rather than guessed at. A missing baseline is
+      # written to the snapshots folder on the first run, so that goes too.
+      - name: Upload screenshot diffs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshot-diffs
+          path: |
+            test-results/
+            tests/*-snapshots/
+          retention-days: 7
+
+      - name: Upload new baselines
+        if: inputs.update-snapshots
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshot-baselines
+          path: tests/*-snapshots/
+          retention-days: 7
